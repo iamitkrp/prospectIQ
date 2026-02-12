@@ -6,7 +6,11 @@ import { revalidatePath } from "next/cache";
 
 /**
  * Sign up a new user with email and password.
- * Returns error message on failure, or redirects on success.
+ *
+ * If Supabase has email confirmation enabled (default), the user
+ * won't have a session yet — they need to click the link in their
+ * inbox first. In that case we return a success message instead of
+ * redirecting to /dashboard (which would bounce to /login).
  */
 export async function signUp(formData: FormData) {
     const supabase = await createClient();
@@ -22,7 +26,7 @@ export async function signUp(formData: FormData) {
         return { error: "Password must be at least 6 characters." };
     }
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
         email,
         password,
     });
@@ -31,6 +35,15 @@ export async function signUp(formData: FormData) {
         return { error: error.message };
     }
 
+    // If email confirmation is enabled, Supabase returns a user
+    // but with an empty session. We check for that.
+    if (data.user && !data.session) {
+        return {
+            success: "Check your email for a confirmation link.",
+        };
+    }
+
+    // If email confirmation is disabled, user gets a session immediately
     revalidatePath("/", "layout");
     redirect("/dashboard");
 }
