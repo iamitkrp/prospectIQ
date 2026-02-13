@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 
 /**
  * Sign up a new user with email and password.
@@ -94,4 +95,35 @@ export async function getUser() {
         data: { user },
     } = await supabase.auth.getUser();
     return user;
+}
+
+/**
+ * Sign in with Google OAuth.
+ * Returns the OAuth redirect URL for the client to navigate to.
+ */
+export async function signInWithGoogle() {
+    const supabase = await createClient();
+    const headersList = await headers();
+    const origin = headersList.get("origin") || "http://localhost:3000";
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+            redirectTo: `${origin}/auth/callback`,
+            queryParams: {
+                access_type: "offline",
+                prompt: "consent",
+            },
+        },
+    });
+
+    if (error) {
+        return { error: error.message };
+    }
+
+    if (data.url) {
+        redirect(data.url);
+    }
+
+    return { error: "Failed to get OAuth URL." };
 }
