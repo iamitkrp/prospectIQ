@@ -131,3 +131,81 @@ a {
   outline: 2px solid var(--brand-500);
   outline-offset: 2px;
 }
+
+/* --- Skeleton Loading --- */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-surface) 25%, var(--bg-elevated) 50%, var(--bg-surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-title {
+  height: 28px;
+  width: 60%;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-subtitle {
+  height: 16px;
+  width: 40%;
+}
+
+.skeleton-label {
+  height: 12px;
+  width: 50%;
+  margin-bottom: 0.75rem;
+}
+
+.skeleton-value {
+  height: 32px;
+  width: 40%;
+}
+
+.skeleton-section-title {
+  height: 20px;
+  width: 30%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* --- Loading Pulse --- */
+.loading-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.95);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.loading-container {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
