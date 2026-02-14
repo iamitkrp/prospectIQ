@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createProspect, updateProspect, deleteProspect } from "@/app/prospects/actions";
 import type { Prospect } from "@/types";
 import type { EnrichmentResult } from "@/lib/enrichment";
+import type { GeneratedEmail } from "@/lib/prompts";
 
 interface ProspectTableProps {
     prospects: Prospect[];
@@ -24,6 +25,11 @@ export function ProspectTable({ prospects, currentPage, totalPages, totalCount }
     const [loading, setLoading] = useState(false);
     const [enrichingId, setEnrichingId] = useState<string | null>(null);
     const [detailProspect, setDetailProspect] = useState<Prospect | null>(null);
+    const [generatingId, setGeneratingId] = useState<string | null>(null);
+    const [draftProspect, setDraftProspect] = useState<Prospect | null>(null);
+    const [draftData, setDraftData] = useState<GeneratedEmail | null>(null);
+    const [draftError, setDraftError] = useState<{ message: string; code: string; retryAfter?: number } | null>(null);
+    const [retrying, setRetrying] = useState(false);
 
     function clearMessages() {
         setError(null);
@@ -104,6 +110,64 @@ export function ProspectTable({ prospects, currentPage, totalPages, totalCount }
             setError("Network error — could not reach the server.");
         } finally {
             setEnrichingId(null);
+        }
+    }
+
+    async function handleGenerate(prospect: Prospect) {
+        clearMessages();
+        setGeneratingId(prospect.id);
+        setDraftError(null);
+        setDraftData(null);
+        setRetrying(false);
+
+        try {
+            const res = await fetch("/api/ai/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prospectId: prospect.id }),
+            });
+            const json = await res.json();
+
+            if (!res.ok) {
+                const errCode = json.code ?? "SERVER_ERROR";
+
+                // Auto-retry on rate limit
+                if (errCode === "RATE_LIMITED" && json.retryAfter) {
+                    setRetrying(true);
+                    const waitMs = (json.retryAfter as number) * 1000;
+                    await new Promise((r) => setTimeout(r, waitMs));
+                    setRetrying(false);
+                    // One more attempt
+                    const retry = await fetch("/api/ai/generate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ prospectId: prospect.id }),
+                    });
+                    const retryJson = await retry.json();
+                    if (retry.ok) {
+                        setDraftData(retryJson.email as GeneratedEmail);
+                        setDraftProspect(prospect);
+                        setSuccess("Draft generated!");
+                        return;
+                    }
+                    setDraftError({ message: retryJson.error, code: retryJson.code, retryAfter: retryJson.retryAfter });
+                    setDraftProspect(prospect);
+                    return;
+                }
+
+                setDraftError({ message: json.error, code: errCode, retryAfter: json.retryAfter });
+                setDraftProspect(prospect);
+                return;
+            }
+
+            setDraftData(json.email as GeneratedEmail);
+            setDraftProspect(prospect);
+            setSuccess("Draft generated!");
+        } catch {
+            setDraftError({ message: "Network error — could not reach the server.", code: "NETWORK" });
+            setDraftProspect(prospect);
+        } finally {
+            setGeneratingId(null);
         }
     }
 
@@ -212,6 +276,29 @@ export function ProspectTable({ prospects, currentPage, totalPages, totalCount }
                                                     </svg>
                                                 </button>
                                                 <button
+                                                    className={`btn-icon btn-icon-generate ${generatingId === p.id ? "generating" : ""}`}
+                                                    title="Generate Draft"
+                                                    onClick={() => handleGenerate(p)}
+                                                    disabled={generatingId === p.id}
+                                                >
+                                                    {generatingId === p.id ? (
+                                                        retrying ? (
+                                                            <svg width="16" height="16" viewBox="0 0 16 16" className="spin">
+                                                                <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="28" strokeDashoffset="8" strokeLinecap="round" />
+                                                            </svg>
+                                                        ) : (
+                                                            <svg width="16" height="16" viewBox="0 0 16 16" className="spin">
+                                                                <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="28" strokeDashoffset="8" strokeLinecap="round" />
+                                                            </svg>
+                                                        )
+                                                    ) : (
+                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                                            <path d="M8 1l1.5 3.5L13 6l-3.5 1.5L8 11 6.5 7.5 3 6l3.5-1.5L8 1z" />
+                                                            <path d="M12 10l.75 1.75L14.5 12.5l-1.75.75L12 15l-.75-1.75-1.75-.75 1.75-.75L12 10z" />
+                                                        </svg>
+                                                    )}
+                                                </button>
+                                                <button
                                                     className="btn-icon"
                                                     title="Edit"
                                                     onClick={() => { clearMessages(); setEditingProspect(p); }}
@@ -314,6 +401,19 @@ export function ProspectTable({ prospects, currentPage, totalPages, totalCount }
                     onClose={() => setDetailProspect(null)}
                     onEnrich={() => handleEnrich(detailProspect)}
                     enriching={enrichingId === detailProspect.id}
+                />
+            )}
+
+            {/* Draft Preview Modal */}
+            {draftProspect && (draftData || draftError) && (
+                <DraftPreviewModal
+                    prospect={draftProspect}
+                    draft={draftData}
+                    error={draftError}
+                    onClose={() => { setDraftProspect(null); setDraftData(null); setDraftError(null); }}
+                    onRegenerate={() => handleGenerate(draftProspect)}
+                    generating={generatingId === draftProspect.id}
+                    retrying={retrying}
                 />
             )}
         </>
@@ -569,6 +669,147 @@ function ProspectDetailDrawer({ prospect, onClose, onEnrich, enriching }: Prospe
                         {savingNotes ? "Saving…" : "💾 Save Notes"}
                     </button>
                 </div>
+            </div>
+        </div>
+    );
+}
+
+/* ──────── Draft Preview Modal ──────── */
+
+interface DraftPreviewModalProps {
+    prospect: Prospect;
+    draft: GeneratedEmail | null;
+    error: { message: string; code: string; retryAfter?: number } | null;
+    onClose: () => void;
+    onRegenerate: () => void;
+    generating: boolean;
+    retrying: boolean;
+}
+
+function DraftPreviewModal({
+    prospect,
+    draft,
+    error,
+    onClose,
+    onRegenerate,
+    generating,
+    retrying,
+}: DraftPreviewModalProps) {
+    const name = [prospect.first_name, prospect.last_name].filter(Boolean).join(" ") || "Unnamed";
+    const [editSubject, setEditSubject] = useState(draft?.subject ?? "");
+    const [editBody, setEditBody] = useState(draft?.body ?? "");
+
+    // Sync when draft changes (e.g. after regenerate)
+    useEffect(() => {
+        if (draft?.subject) setEditSubject(draft.subject);
+        if (draft?.body) setEditBody(draft.body);
+    }, [draft?.subject, draft?.body]);
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-card draft-modal" onClick={(e) => e.stopPropagation()}>
+                {/* Header */}
+                <div className="draft-modal-header">
+                    <div>
+                        <h2 className="modal-title">✨ AI Draft</h2>
+                        <p style={{ color: "var(--text-muted)", fontSize: "0.8125rem", marginTop: "0.125rem" }}>
+                            For {name}{prospect.company_name ? ` at ${prospect.company_name}` : ""}
+                        </p>
+                    </div>
+                    <button className="btn-icon" onClick={onClose} title="Close">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                            <path d="M5 5l10 10M15 5L5 15" />
+                        </svg>
+                    </button>
+                </div>
+
+                {/* Error State */}
+                {error && (
+                    <div className="draft-error-block">
+                        <div className="draft-error-icon">
+                            {error.code === "RATE_LIMITED" ? "⏳" : "⚠️"}
+                        </div>
+                        <div>
+                            <p className="draft-error-title">
+                                {error.code === "RATE_LIMITED" ? "AI is busy" :
+                                    error.code === "TIMEOUT" ? "Request timed out" :
+                                        "Generation failed"}
+                            </p>
+                            <p className="draft-error-msg">{error.message}</p>
+                        </div>
+                        <button
+                            className="btn-primary"
+                            onClick={onRegenerate}
+                            disabled={generating}
+                            style={{ marginTop: "0.75rem" }}
+                        >
+                            {generating
+                                ? retrying ? "⏳ Retrying…" : "Generating…"
+                                : "🔄 Try Again"}
+                        </button>
+                    </div>
+                )}
+
+                {/* Draft Content */}
+                {draft && !error && (
+                    <>
+                        {/* Rationale */}
+                        {draft.rationale && (
+                            <div className="draft-rationale">
+                                <span className="draft-rationale-label">🧠 AI Strategy:</span>{" "}
+                                {draft.rationale}
+                            </div>
+                        )}
+
+                        {/* Subject */}
+                        <div className="draft-field">
+                            <label className="draft-field-label">Subject</label>
+                            <input
+                                type="text"
+                                className="draft-input"
+                                value={editSubject}
+                                onChange={(e) => setEditSubject(e.target.value)}
+                            />
+                        </div>
+
+                        {/* Body */}
+                        <div className="draft-field">
+                            <label className="draft-field-label">Body</label>
+                            <textarea
+                                className="draft-textarea"
+                                value={editBody}
+                                onChange={(e) => setEditBody(e.target.value)}
+                                rows={10}
+                            />
+                        </div>
+
+                        {/* Actions */}
+                        <div className="draft-actions">
+                            <button
+                                className="btn-secondary"
+                                onClick={onRegenerate}
+                                disabled={generating}
+                            >
+                                {generating
+                                    ? retrying ? "⏳ Retrying…" : "✨ Generating…"
+                                    : "🔄 Regenerate"}
+                            </button>
+                            <button className="btn-primary" disabled title="Coming in Sprint 2.2">
+                                📧 Send Email
+                            </button>
+                        </div>
+                    </>
+                )}
+
+                {/* Generating state (modal opened while still generating) */}
+                {generating && !draft && !error && (
+                    <div className="draft-generating">
+                        <svg width="32" height="32" viewBox="0 0 32 32" className="spin">
+                            <circle cx="16" cy="16" r="12" fill="none" stroke="var(--brand-500)" strokeWidth="3" strokeDasharray="56" strokeDashoffset="16" strokeLinecap="round" />
+                        </svg>
+                        <p>{retrying ? "AI is busy — retrying…" : "Crafting your email…"}</p>
+                    </div>
+                )}
             </div>
         </div>
     );
