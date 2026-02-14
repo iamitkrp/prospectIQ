@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createProspect, updateProspect, deleteProspect } from "@/app/prospects/actions";
 import type { Prospect } from "@/types";
+import type { EnrichmentResult } from "@/lib/enrichment";
 
 interface ProspectTableProps {
     prospects: Prospect[];
@@ -21,6 +22,8 @@ export function ProspectTable({ prospects, currentPage, totalPages, totalCount }
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [enrichingId, setEnrichingId] = useState<string | null>(null);
+    const [detailProspect, setDetailProspect] = useState<Prospect | null>(null);
 
     function clearMessages() {
         setError(null);
@@ -68,6 +71,39 @@ export function ProspectTable({ prospects, currentPage, totalPages, totalCount }
             setSuccess(result.success ?? "Deleted!");
             setDeletingId(null);
             router.refresh();
+        }
+    }
+
+    async function handleEnrich(prospect: Prospect) {
+        clearMessages();
+        setEnrichingId(prospect.id);
+        try {
+            const res = await fetch("/api/prospects/enrich", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prospectId: prospect.id }),
+            });
+            const json = await res.json();
+            if (!res.ok) {
+                setError(json.error ?? "Enrichment failed");
+            } else {
+                setSuccess("Research complete!");
+                // Update the prospect's raw_data locally so the drawer shows it
+                const enrichedProspect = {
+                    ...prospect,
+                    raw_data: {
+                        ...(prospect.raw_data ?? {}),
+                        enrichment: json.enrichment,
+                        enrichedAt: new Date().toISOString(),
+                    },
+                };
+                setDetailProspect(enrichedProspect);
+                router.refresh();
+            }
+        } catch {
+            setError("Network error — could not reach the server.");
+        } finally {
+            setEnrichingId(null);
         }
     }
 
@@ -134,7 +170,7 @@ export function ProspectTable({ prospects, currentPage, totalPages, totalCount }
                                     <th>Email</th>
                                     <th>Company</th>
                                     <th>Role</th>
-                                    <th style={{ width: "100px" }}>Actions</th>
+                                    <th style={{ width: "160px" }}>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -148,6 +184,33 @@ export function ProspectTable({ prospects, currentPage, totalPages, totalCount }
                                         <td>{p.role || "—"}</td>
                                         <td>
                                             <div className="row-actions">
+                                                <button
+                                                    className={`btn-icon btn-icon-research ${enrichingId === p.id ? "researching" : ""}`}
+                                                    title="Research"
+                                                    onClick={() => handleEnrich(p)}
+                                                    disabled={enrichingId === p.id}
+                                                >
+                                                    {enrichingId === p.id ? (
+                                                        <svg width="16" height="16" viewBox="0 0 16 16" className="spin">
+                                                            <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="28" strokeDashoffset="8" strokeLinecap="round" />
+                                                        </svg>
+                                                    ) : (
+                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                                            <circle cx="7" cy="7" r="5" />
+                                                            <path d="M14 14l-3.5-3.5" />
+                                                        </svg>
+                                                    )}
+                                                </button>
+                                                <button
+                                                    className="btn-icon"
+                                                    title="View Detail"
+                                                    onClick={() => { clearMessages(); setDetailProspect(p); }}
+                                                >
+                                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                                        <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z" />
+                                                        <circle cx="8" cy="8" r="2" />
+                                                    </svg>
+                                                </button>
                                                 <button
                                                     className="btn-icon"
                                                     title="Edit"
@@ -243,6 +306,16 @@ export function ProspectTable({ prospects, currentPage, totalPages, totalCount }
                     </div>
                 </div>
             )}
+
+            {/* Prospect Detail Drawer */}
+            {detailProspect && (
+                <ProspectDetailDrawer
+                    prospect={detailProspect}
+                    onClose={() => setDetailProspect(null)}
+                    onEnrich={() => handleEnrich(detailProspect)}
+                    enriching={enrichingId === detailProspect.id}
+                />
+            )}
         </>
     );
 }
@@ -306,6 +379,150 @@ function ProspectModal({ title, submitLabel, onSubmit, onClose, loading, default
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    );
+}
+
+/* ──────── Prospect Detail Drawer ──────── */
+
+interface ProspectDetailDrawerProps {
+    prospect: Prospect;
+    onClose: () => void;
+    onEnrich: () => void;
+    enriching: boolean;
+}
+
+function ProspectDetailDrawer({ prospect, onClose, onEnrich, enriching }: ProspectDetailDrawerProps) {
+    const name = [prospect.first_name, prospect.last_name].filter(Boolean).join(" ") || "Unnamed";
+    const rawData = prospect.raw_data as Record<string, unknown> | null;
+    const enrichment = rawData?.enrichment as EnrichmentResult | undefined;
+
+    return (
+        <div className="drawer-overlay" onClick={onClose}>
+            <div className="drawer-panel" onClick={(e) => e.stopPropagation()}>
+                {/* Header */}
+                <div className="drawer-header">
+                    <div>
+                        <h2 className="drawer-title">{name}</h2>
+                        <p className="drawer-subtitle">{prospect.role ?? ""}{prospect.role && prospect.company_name ? " at " : ""}{prospect.company_name ?? ""}</p>
+                    </div>
+                    <button className="btn-icon" onClick={onClose} title="Close">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                            <path d="M5 5l10 10M15 5L5 15" />
+                        </svg>
+                    </button>
+                </div>
+
+                {/* Contact Info */}
+                <div className="drawer-section">
+                    <h3 className="drawer-section-label">Contact</h3>
+                    <div className="drawer-field">
+                        <span className="drawer-field-label">Email</span>
+                        <a href={`mailto:${prospect.email}`} className="drawer-link">{prospect.email}</a>
+                    </div>
+                    {prospect.linkedin_url && (
+                        <div className="drawer-field">
+                            <span className="drawer-field-label">LinkedIn</span>
+                            <a href={prospect.linkedin_url} target="_blank" rel="noopener noreferrer" className="drawer-link">
+                                {prospect.linkedin_url.replace(/https?:\/\/(www\.)?/, "").slice(0, 40)}
+                            </a>
+                        </div>
+                    )}
+                </div>
+
+                {/* Enrichment Data */}
+                {enrichment ? (
+                    <>
+                        <div className="drawer-section">
+                            <h3 className="drawer-section-label">
+                                🔍 Research Results
+                                <span className="drawer-enriched-badge">Enriched</span>
+                            </h3>
+
+                            {enrichment.title && (
+                                <div className="drawer-field">
+                                    <span className="drawer-field-label">Page Title</span>
+                                    <span>{enrichment.title}</span>
+                                </div>
+                            )}
+
+                            {enrichment.description && (
+                                <div className="drawer-field">
+                                    <span className="drawer-field-label">Description</span>
+                                    <p className="drawer-text">{enrichment.description}</p>
+                                </div>
+                            )}
+
+                            {enrichment.detectedTech.length > 0 && (
+                                <div className="drawer-field">
+                                    <span className="drawer-field-label">Tech Stack</span>
+                                    <div className="drawer-tags">
+                                        {enrichment.detectedTech.map((t, i) => (
+                                            <span key={i} className="drawer-tag">{t}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {Object.keys(enrichment.socialLinks).length > 0 && (
+                                <div className="drawer-field">
+                                    <span className="drawer-field-label">Social Links</span>
+                                    <div className="drawer-tags">
+                                        {Object.entries(enrichment.socialLinks).map(([name, url]) => (
+                                            <a key={name} href={url} target="_blank" rel="noopener noreferrer" className="drawer-tag drawer-tag-link">
+                                                {name}
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {enrichment.keyParagraphs.length > 0 && (
+                            <div className="drawer-section">
+                                <h3 className="drawer-section-label">Key Info</h3>
+                                <div className="drawer-paragraphs">
+                                    {enrichment.keyParagraphs.slice(0, 5).map((p, i) => (
+                                        <p key={i} className="drawer-text">{p}</p>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {enrichment.headings.length > 0 && (
+                            <div className="drawer-section">
+                                <h3 className="drawer-section-label">Page Structure</h3>
+                                <ul className="drawer-headings">
+                                    {enrichment.headings.slice(0, 10).map((h, i) => (
+                                        <li key={i}>{h}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        <div className="drawer-section">
+                            <p className="drawer-meta">
+                                Scraped from <a href={enrichment.sourceUrl} target="_blank" rel="noopener noreferrer" className="drawer-link">{enrichment.sourceUrl}</a>
+                                {" — "}{new Date(enrichment.scrapedAt).toLocaleDateString()}
+                            </p>
+                            <button className="btn-secondary" onClick={onEnrich} disabled={enriching} style={{ marginTop: "0.5rem" }}>
+                                {enriching ? "Researching…" : "🔄 Re-Research"}
+                            </button>
+                        </div>
+                    </>
+                ) : (
+                    <div className="drawer-section drawer-empty-research">
+                        <div className="drawer-empty-icon">🔍</div>
+                        <h3 className="drawer-empty-title">No research data yet</h3>
+                        <p className="drawer-empty-desc">
+                            Click below to scrape this prospect{"'"}s company website and gather context for AI emails.
+                        </p>
+                        <button className="btn-primary" onClick={onEnrich} disabled={enriching}>
+                            {enriching ? "Researching…" : "🔍 Research This Prospect"}
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
