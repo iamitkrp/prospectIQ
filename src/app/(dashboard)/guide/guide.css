@@ -88,6 +88,11 @@
     color: var(--brand-400);
 }
 
+.guide-card-icon.cyan {
+    background: rgba(6, 182, 212, 0.12);
+    color: #22d3ee;
+}
+
 .guide-card-icon.blue {
     background: rgba(59, 130, 246, 0.12);
     color: var(--info);

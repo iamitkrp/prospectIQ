@@ -33,6 +33,29 @@ const steps = [
     },
     {
         number: "02",
+        title: "Research & Enrich Prospects",
+        icon: (
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" />
+                <path d="M11 8v6M8 11h6" />
+            </svg>
+        ),
+        color: "cyan",
+        what: "Before reaching out, ProspectIQ researches each prospect's company — scraping their website to gather context like what the company does, recent news, tech stack, and key initiatives. This intel is stored in the prospect's profile.",
+        why: "Sending a cold email without knowing anything about the person's company is a wasted touch. Research turns a generic pitch into a relevant conversation. When you mention their recent product launch or funding round, response rates skyrocket.",
+        how: [
+            "Click the **\"Research\"** button on any prospect's row",
+            "ProspectIQ scrapes their company website and extracts key information",
+            "View the enriched data in the **Prospect Detail** panel",
+            "Add your own **manual notes** — anything you've found on LinkedIn, Twitter, or news",
+            "This context is automatically fed into the AI when generating emails in Step 3",
+        ],
+        tip: "The best outreach references something specific and recent. Even 2 minutes of manual research on LinkedIn can dramatically improve your email's relevance.",
+        status: "Coming in Sprint 1.4",
+    },
+    {
+        number: "03",
         title: "Generate AI-Powered Emails",
         icon: (
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -42,19 +65,19 @@ const steps = [
             </svg>
         ),
         color: "blue",
-        what: "ProspectIQ uses Groq's Llama 3.3 AI to write personalized outreach emails for each prospect. The AI uses their name, company, and role to craft relevant, human-sounding messages.",
-        why: "Generic emails get ignored. Personalized emails that reference a prospect's company and role get 3-5x higher response rates. The AI does this at scale — in seconds, not hours.",
+        what: "ProspectIQ uses Groq's Llama 3.3 AI to write personalized outreach emails for each prospect. The AI uses their name, company, role, AND the enrichment data from Step 2 to craft highly relevant, human-sounding messages.",
+        why: "Generic emails get ignored. Personalized emails that reference a prospect's company, recent news, and role get 3-5x higher response rates. The AI does this at scale — in seconds, not hours — using the research context you've gathered.",
         how: [
             "Click **\"Generate Draft\"** on any prospect's row",
-            "The AI writes a personalized subject line + email body",
+            "The AI reads the prospect's enrichment data and writes a personalized subject line + email body",
             "Review and edit the draft to match your voice",
             "Click **\"Send\"** to deliver it via email, or save it for a campaign",
         ],
-        tip: "Always review AI drafts before sending. Add a personal touch — mention something specific about their company for even better results.",
+        tip: "Prospects with enrichment data produce significantly better AI drafts. Always research before generating.",
         status: "Coming in Phase 2",
     },
     {
-        number: "03",
+        number: "04",
         title: "Send Emails via Brevo",
         icon: (
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -75,7 +98,7 @@ const steps = [
         status: "Coming in Phase 2",
     },
     {
-        number: "04",
+        number: "05",
         title: "Create Automated Campaigns",
         icon: (
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -99,7 +122,7 @@ const steps = [
         status: "Coming in Phase 3",
     },
     {
-        number: "05",
+        number: "06",
         title: "Track Everything on the Dashboard",
         icon: (
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -126,6 +149,8 @@ const steps = [
 
 const glossary = [
     { term: "Prospect", definition: "A person you want to contact — your potential lead or client." },
+    { term: "Enrichment", definition: "The process of researching a prospect's company to gather context (what they do, recent news, tech stack) before outreach." },
+    { term: "raw_data", definition: "A JSONB field on each prospect that stores enrichment data — company description, scraped info, and manual notes." },
     { term: "Campaign", definition: "An automated multi-step email sequence sent to a group of prospects." },
     { term: "Step", definition: "One email in a campaign sequence, with a delay and AI prompt template." },
     { term: "Draft", definition: "An AI-generated email that you can edit before sending." },
@@ -154,21 +179,26 @@ export default function GuidePage() {
                 <div className="guide-flow-arrow">→</div>
                 <div className="guide-flow-step">
                     <div className="guide-flow-num">2</div>
-                    <span>AI Writes Emails</span>
+                    <span>Research & Enrich</span>
                 </div>
                 <div className="guide-flow-arrow">→</div>
                 <div className="guide-flow-step">
                     <div className="guide-flow-num">3</div>
-                    <span>Send via Brevo</span>
+                    <span>AI Writes Emails</span>
                 </div>
                 <div className="guide-flow-arrow">→</div>
                 <div className="guide-flow-step">
                     <div className="guide-flow-num">4</div>
-                    <span>Automate Sequences</span>
+                    <span>Send via Brevo</span>
                 </div>
                 <div className="guide-flow-arrow">→</div>
                 <div className="guide-flow-step">
                     <div className="guide-flow-num">5</div>
+                    <span>Automate Sequences</span>
+                </div>
+                <div className="guide-flow-arrow">→</div>
+                <div className="guide-flow-step">
+                    <div className="guide-flow-num">6</div>
                     <span>Track Results</span>
                 </div>
             </div>
