@@ -117,7 +117,8 @@ export async function POST(request: NextRequest) {
 
 /**
  * Determine the best URL to scrape for a prospect.
- * Priority: manual URL > LinkedIn company > company name search.
+ * Priority: manual URL > company website > LinkedIn (last resort).
+ * LinkedIn is deprioritised because it returns HTTP 999 for server-side fetches.
  */
 function resolveUrl(
     manualUrl: string | undefined,
@@ -128,19 +129,18 @@ function resolveUrl(
         return manualUrl.trim();
     }
 
-    // 2. LinkedIn URL — scrape the LinkedIn page directly
-    if (prospect.linkedin_url?.trim()) {
-        return prospect.linkedin_url.trim();
-    }
-
-    // 3. Company name — construct a search-friendly URL
-    //    We'll try the company's likely website (companyname.com)
+    // 2. Company name — try the company's likely website (companyname.com)
     if (prospect.company_name?.trim()) {
         const slug = prospect.company_name
             .trim()
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, "");
         return `https://${slug}.com`;
+    }
+
+    // 3. LinkedIn — last resort (often blocked with HTTP 999)
+    if (prospect.linkedin_url?.trim()) {
+        return prospect.linkedin_url.trim();
     }
 
     return null;

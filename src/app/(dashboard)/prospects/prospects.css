@@ -569,3 +569,29 @@
     margin-left: auto;
     margin-right: auto;
 }
+
+/* Notes Textarea */
+.drawer-notes {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 0.8125rem;
+    font-family: inherit;
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 100px;
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.drawer-notes::placeholder {
+    color: var(--text-muted);
+}
+
+.drawer-notes:focus {
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}

@@ -394,9 +394,32 @@ interface ProspectDetailDrawerProps {
 }
 
 function ProspectDetailDrawer({ prospect, onClose, onEnrich, enriching }: ProspectDetailDrawerProps) {
+    const router = useRouter();
     const name = [prospect.first_name, prospect.last_name].filter(Boolean).join(" ") || "Unnamed";
     const rawData = prospect.raw_data as Record<string, unknown> | null;
     const enrichment = rawData?.enrichment as EnrichmentResult | undefined;
+    const [notes, setNotes] = useState((rawData?.notes as string) ?? "");
+    const [savingNotes, setSavingNotes] = useState(false);
+    const [notesSaved, setNotesSaved] = useState(false);
+
+    async function handleSaveNotes() {
+        setSavingNotes(true);
+        setNotesSaved(false);
+        try {
+            const res = await fetch("/api/prospects/notes", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prospectId: prospect.id, notes }),
+            });
+            if (res.ok) {
+                setNotesSaved(true);
+                router.refresh();
+                setTimeout(() => setNotesSaved(false), 2000);
+            }
+        } catch { /* ignore */ } finally {
+            setSavingNotes(false);
+        }
+    }
 
     return (
         <div className="drawer-overlay" onClick={onClose}>
@@ -523,6 +546,29 @@ function ProspectDetailDrawer({ prospect, onClose, onEnrich, enriching }: Prospe
                         </button>
                     </div>
                 )}
+
+                {/* Manual Notes */}
+                <div className="drawer-section">
+                    <h3 className="drawer-section-label">
+                        📝 Your Notes
+                        {notesSaved && <span className="drawer-enriched-badge" style={{ background: "rgba(34,197,94,0.12)", color: "#86efac" }}>Saved</span>}
+                    </h3>
+                    <textarea
+                        className="drawer-notes"
+                        placeholder="Paste your research, talking points, or context for the AI here..."
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        rows={5}
+                    />
+                    <button
+                        className="btn-secondary"
+                        onClick={handleSaveNotes}
+                        disabled={savingNotes}
+                        style={{ marginTop: "0.5rem", alignSelf: "flex-start" }}
+                    >
+                        {savingNotes ? "Saving…" : "💾 Save Notes"}
+                    </button>
+                </div>
             </div>
         </div>
     );
