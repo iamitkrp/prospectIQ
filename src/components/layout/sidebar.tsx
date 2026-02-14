@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/app/auth/actions";
+import { EmailQuotaBadge } from "./email-quota-badge";
 
 const navItems = [
   {
@@ -107,6 +108,7 @@ export function Sidebar() {
 
       {/* Bottom */}
       <div className="sidebar-bottom">
+        <EmailQuotaBadge />
         <form action={signOut}>
           <button type="submit" className="sidebar-signout">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

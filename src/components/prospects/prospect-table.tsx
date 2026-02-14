@@ -698,12 +698,56 @@ function DraftPreviewModal({
     const name = [prospect.first_name, prospect.last_name].filter(Boolean).join(" ") || "Unnamed";
     const [editSubject, setEditSubject] = useState(draft?.subject ?? "");
     const [editBody, setEditBody] = useState(draft?.body ?? "");
+    const [sending, setSending] = useState(false);
+    const [sent, setSent] = useState(false);
+    const [sendToast, setSendToast] = useState<{ message: string; type: "success" | "error" | "warning" } | null>(null);
 
     // Sync when draft changes (e.g. after regenerate)
     useEffect(() => {
         if (draft?.subject) setEditSubject(draft.subject);
         if (draft?.body) setEditBody(draft.body);
     }, [draft?.subject, draft?.body]);
+
+    async function handleSend() {
+        if (!editSubject.trim() || !editBody.trim()) {
+            setSendToast({ message: "Subject and body cannot be empty.", type: "error" });
+            return;
+        }
+        setSending(true);
+        setSendToast(null);
+
+        try {
+            const res = await fetch("/api/email/send", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    prospectId: prospect.id,
+                    subject: editSubject,
+                    body: editBody,
+                }),
+            });
+            const json = await res.json();
+
+            if (!res.ok) {
+                const code = json.code ?? "SEND_FAILED";
+                const toastMap: Record<string, { message: string; type: "error" | "warning" }> = {
+                    DAILY_LIMIT: { message: "\u26d4 Daily email limit reached (300). Try again tomorrow.", type: "error" },
+                    INVALID_EMAIL: { message: "\u274c Invalid recipient email address.", type: "error" },
+                    API_DOWN: { message: "\u26a0\ufe0f Brevo is temporarily unavailable. Try later.", type: "warning" },
+                };
+                setSendToast(toastMap[code] ?? { message: json.error ?? "Send failed.", type: "error" });
+                return;
+            }
+
+            const countMsg = json.warning ?? `${json.sentToday}/300 emails sent today.`;
+            setSendToast({ message: `\u2705 Email sent! ${countMsg}`, type: "success" });
+            setSent(true);
+        } catch {
+            setSendToast({ message: "Network error \u2014 could not reach the server.", type: "error" });
+        } finally {
+            setSending(false);
+        }
+    }
 
     return (
         <div className="modal-overlay" onClick={onClose}>
@@ -788,16 +832,27 @@ function DraftPreviewModal({
                             <button
                                 className="btn-secondary"
                                 onClick={onRegenerate}
-                                disabled={generating}
+                                disabled={generating || sending}
                             >
                                 {generating
                                     ? retrying ? "⏳ Retrying…" : "✨ Generating…"
                                     : "🔄 Regenerate"}
                             </button>
-                            <button className="btn-primary" disabled title="Coming in Sprint 2.2">
-                                📧 Send Email
+                            <button
+                                className="btn-primary"
+                                onClick={handleSend}
+                                disabled={sending || sent || generating}
+                            >
+                                {sending ? "Sending…" : sent ? "✅ Sent" : "📧 Send Email"}
                             </button>
                         </div>
+
+                        {/* Toast */}
+                        {sendToast && (
+                            <div className={`draft-toast draft-toast-${sendToast.type}`}>
+                                {sendToast.message}
+                            </div>
+                        )}
                     </>
                 )}
 

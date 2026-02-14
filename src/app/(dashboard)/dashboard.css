@@ -273,3 +273,76 @@
     font-size: 0.8125rem;
     color: var(--text-muted);
 }
+
+/* ── Email Quota Badge ── */
+
+.quota-badge {
+    padding: 0.625rem 0.75rem;
+    margin-bottom: 0.75rem;
+    border-radius: var(--radius-md);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    transition: all var(--transition-fast);
+}
+
+.quota-badge.warning {
+    border-color: rgba(245, 158, 11, 0.35);
+    background: rgba(245, 158, 11, 0.06);
+}
+
+.quota-badge.danger {
+    border-color: rgba(239, 68, 68, 0.35);
+    background: rgba(239, 68, 68, 0.06);
+}
+
+.quota-header {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-bottom: 0.375rem;
+    color: var(--text-muted);
+}
+
+.quota-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.quota-bar-track {
+    height: 4px;
+    border-radius: 999px;
+    background: var(--bg-hover);
+    overflow: hidden;
+    margin-bottom: 0.25rem;
+}
+
+.quota-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--brand-500);
+    transition: width 0.5s ease;
+}
+
+.quota-badge.warning .quota-bar-fill {
+    background: #f59e0b;
+}
+
+.quota-badge.danger .quota-bar-fill {
+    background: #ef4444;
+}
+
+.quota-count {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.quota-badge.warning .quota-count {
+    color: #d97706;
+}
+
+.quota-badge.danger .quota-count {
+    color: #dc2626;
+}
