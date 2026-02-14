@@ -41,6 +41,15 @@ const navItems = [
     ),
   },
   {
+    label: "Guide",
+    href: "/guide",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 3h5a3 3 0 013 3v11a2 2 0 00-2-2H2V3zM18 3h-5a3 3 0 00-3 3v11a2 2 0 012-2h6V3z" />
+      </svg>
+    ),
+  },
+  {
     label: "Settings",
     href: "/settings",
     icon: (
