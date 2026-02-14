@@ -14,7 +14,8 @@ create extension if not exists pg_trgm;  -- For fuzzy / trigram search
 -- ===========================================
 create table if not exists prospects (
   id uuid default gen_random_uuid() primary key,
-  email text unique not null,
+  user_id uuid references auth.users(id) on delete cascade,
+  email text not null,
   first_name text,
   last_name text,
   company_name text,
@@ -32,7 +33,10 @@ create table if not exists prospects (
     )
   ) stored,
 
-  created_at timestamp with time zone default now()
+  created_at timestamp with time zone default now(),
+
+  -- Email unique per user
+  unique (user_id, email)
 );
 
 -- GIN index for fast full-text search
@@ -111,21 +115,22 @@ create policy "Users can delete own campaigns"
   on campaigns for delete
   using (auth.uid() = user_id);
 
--- Prospects: all authenticated users can access (shared pool)
-create policy "Authenticated users can view prospects"
+-- Prospects: users can only see their own
+create policy "Users can view own prospects"
   on prospects for select
-  to authenticated
-  using (true);
+  using (auth.uid() = user_id);
 
-create policy "Authenticated users can insert prospects"
+create policy "Users can insert own prospects"
   on prospects for insert
-  to authenticated
-  with check (true);
+  with check (auth.uid() = user_id);
 
-create policy "Authenticated users can update prospects"
+create policy "Users can update own prospects"
   on prospects for update
-  to authenticated
-  using (true);
+  using (auth.uid() = user_id);
+
+create policy "Users can delete own prospects"
+  on prospects for delete
+  using (auth.uid() = user_id);
 
 -- Campaign Steps: inherit access from parent campaign
 create policy "Users can view own campaign steps"
