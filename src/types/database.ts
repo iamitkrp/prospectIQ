@@ -50,3 +50,13 @@ export interface EmailLog {
     sent_at: string | null;
     qstash_message_id: string | null;
 }
+
+/**
+ * Campaign-prospect junction — tracks which prospects are assigned to a campaign.
+ */
+export interface CampaignProspect {
+    id: string;
+    campaign_id: string;
+    prospect_id: string;
+    added_at: string;
+}

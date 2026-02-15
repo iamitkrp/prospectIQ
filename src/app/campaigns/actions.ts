@@ -286,3 +286,132 @@ export async function removeStep(
     return { error: null };
 }
 
+/* ================================================================
+   CAMPAIGN ↔ PROSPECT ACTIONS
+   ================================================================ */
+
+/**
+ * Get prospects NOT already in this campaign, for the "Add Prospects" modal.
+ */
+export async function getAvailableProspects(campaignId: string): Promise<{
+    data: Prospect[];
+    error: string | null;
+}> {
+    const supabase = await createClient();
+    const {
+        data: { user },
+        error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+        return { data: [], error: "Not authenticated" };
+    }
+
+    // Get IDs already assigned
+    const { data: assigned } = await supabase
+        .from("campaign_prospects")
+        .select("prospect_id")
+        .eq("campaign_id", campaignId);
+
+    const assignedIds = (assigned ?? []).map((r) => r.prospect_id);
+
+    // Fetch all user prospects, filter out assigned
+    let query = supabase
+        .from("prospects")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+    if (assignedIds.length > 0) {
+        // Supabase doesn't have "not in" natively via .not() with arrays easily,
+        // so we filter client-side for simplicity
+        const { data: all, error } = await query;
+        if (error) return { data: [], error: error.message };
+        const filtered = (all ?? []).filter((p) => !assignedIds.includes(p.id));
+        return { data: filtered as Prospect[], error: null };
+    }
+
+    const { data, error } = await query;
+    if (error) return { data: [], error: error.message };
+    return { data: (data ?? []) as Prospect[], error: null };
+}
+
+/**
+ * Count prospects assigned to a campaign.
+ */
+export async function getCampaignProspectCount(campaignId: string): Promise<number> {
+    const supabase = await createClient();
+    const { count } = await supabase
+        .from("campaign_prospects")
+        .select("id", { count: "exact", head: true })
+        .eq("campaign_id", campaignId);
+
+    return count ?? 0;
+}
+
+/**
+ * Bulk-add prospects to a campaign.
+ */
+export async function addProspectsToCampaign(
+    campaignId: string,
+    prospectIds: string[]
+): Promise<{ count: number; error: string | null }> {
+    if (prospectIds.length === 0) {
+        return { count: 0, error: "No prospects selected" };
+    }
+
+    const supabase = await createClient();
+    const {
+        data: { user },
+        error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+        return { count: 0, error: "Not authenticated" };
+    }
+
+    const rows = prospectIds.map((pid) => ({
+        campaign_id: campaignId,
+        prospect_id: pid,
+    }));
+
+    const { error } = await supabase
+        .from("campaign_prospects")
+        .insert(rows);
+
+    if (error) {
+        return { count: 0, error: error.message };
+    }
+
+    return { count: prospectIds.length, error: null };
+}
+
+/**
+ * Remove a prospect from a campaign.
+ */
+export async function removeProspectFromCampaign(
+    campaignId: string,
+    prospectId: string
+): Promise<{ error: string | null }> {
+    const supabase = await createClient();
+    const {
+        data: { user },
+        error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+        return { error: "Not authenticated" };
+    }
+
+    const { error } = await supabase
+        .from("campaign_prospects")
+        .delete()
+        .eq("campaign_id", campaignId)
+        .eq("prospect_id", prospectId);
+
+    if (error) {
+        return { error: error.message };
+    }
+
+    return { error: null };
+}
