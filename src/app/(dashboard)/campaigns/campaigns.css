@@ -506,3 +506,106 @@
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+/* ===========================================
+   Campaign Controls (3.1.9)
+   =========================================== */
+
+.campaign-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 0.875rem 1.25rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+}
+
+.campaign-controls-left,
+.campaign-controls-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.campaign-prospect-count {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.btn-warning {
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+}
+
+.btn-warning:hover {
+    background: rgba(245, 158, 11, 0.2);
+}
+
+.btn-disabled-hint {
+    opacity: 0.5;
+}
+
+/* ===========================================
+   Add Prospects Modal (3.1.7)
+   =========================================== */
+
+.add-prospects-modal {
+    width: 720px;
+    max-width: 95vw;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.add-prospects-search {
+    padding: 0 0 0.75rem;
+}
+
+.add-prospects-table-wrap {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 400px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+}
+
+.add-prospects-loading,
+.add-prospects-empty {
+    padding: 3rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.row-selected {
+    background: rgba(99, 102, 241, 0.06) !important;
+}
+
+.add-prospects-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.875rem;
+    margin-top: 0.75rem;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.add-prospects-count {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.add-prospects-actions {
+    display: flex;
+    gap: 0.5rem;
+}

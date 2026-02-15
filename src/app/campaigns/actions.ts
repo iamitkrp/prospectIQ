@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import type { Campaign, CampaignStep } from "@/types/database";
+import type { Campaign, CampaignStep, Prospect } from "@/types/database";
 
 /**
  * Fetch all campaigns for the authenticated user, newest first.

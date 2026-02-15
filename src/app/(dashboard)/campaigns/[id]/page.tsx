@@ -1,5 +1,6 @@
-import { getCampaignWithSteps } from "@/app/campaigns/actions";
+import { getCampaignWithSteps, getCampaignProspectCount } from "@/app/campaigns/actions";
 import { StepBuilder } from "@/components/campaigns/step-builder";
+import { CampaignControls } from "@/components/campaigns/campaign-controls";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import "../campaigns.css";
@@ -23,7 +24,10 @@ const STATUS_CONFIG: Record<string, { label: string; className: string; icon: st
 
 export default async function CampaignDetailPage({ params }: CampaignDetailPageProps) {
     const { id } = await params;
-    const { campaign, steps, error } = await getCampaignWithSteps(id);
+    const [{ campaign, steps, error }, prospectCount] = await Promise.all([
+        getCampaignWithSteps(id),
+        getCampaignProspectCount(id),
+    ]);
 
     if (!campaign) {
         notFound();
@@ -61,6 +65,13 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
                     </div>
                 </div>
             </div>
+
+            {/* Controls: Add Prospects + Status Toggle */}
+            <CampaignControls
+                campaign={campaign}
+                prospectCount={prospectCount}
+                stepCount={steps.length}
+            />
 
             {/* Step Builder */}
             <StepBuilder
