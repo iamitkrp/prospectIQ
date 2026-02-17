@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createProspect, updateProspect, deleteProspect } from "@/app/prospects/actions";
+import { AddToCampaignModal } from "@/components/prospects/add-to-campaign-modal";
 import type { Prospect } from "@/types";
 import type { EnrichmentResult } from "@/lib/enrichment";
 import type { GeneratedEmail } from "@/lib/prompts";
@@ -44,6 +45,11 @@ export function ProspectTable({ prospects, currentPage, totalPages, totalCount, 
     const [draftData, setDraftData] = useState<GeneratedEmail | null>(null);
     const [draftError, setDraftError] = useState<{ message: string; code: string; retryAfter?: number } | null>(null);
     const [retrying, setRetrying] = useState(false);
+    // Multi-select
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [showCampaignModal, setShowCampaignModal] = useState(false);
+    // Filters
+    const searchParams = useSearchParams();
 
     function clearMessages() {
         setError(null);
@@ -185,17 +191,129 @@ export function ProspectTable({ prospects, currentPage, totalPages, totalCount, 
         }
     }
 
+    // ── Selection helpers ──
+    const allSelected = prospects.length > 0 && prospects.every((p) => selectedIds.has(p.id));
+    function toggleAll() {
+        if (allSelected) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(prospects.map((p) => p.id)));
+        }
+    }
+    function toggleOne(id: string) {
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
+    }
+
+    // ── Filter chips ──
+    const uniqueRoles = useMemo(() => {
+        const set = new Set<string>();
+        prospects.forEach((p) => { if (p.role) set.add(p.role); });
+        return Array.from(set).sort();
+    }, [prospects]);
+
+    const uniqueCompanies = useMemo(() => {
+        const set = new Set<string>();
+        prospects.forEach((p) => { if (p.company_name) set.add(p.company_name); });
+        return Array.from(set).sort();
+    }, [prospects]);
+
+    const activeRole = searchParams.get("role") ?? "";
+    const activeCompany = searchParams.get("company") ?? "";
+
+    function setFilter(key: string, value: string) {
+        const params = new URLSearchParams(searchParams.toString());
+        if (value) {
+            params.set(key, value);
+        } else {
+            params.delete(key);
+        }
+        params.set("page", "1");
+        router.push(`/prospects?${params.toString()}`);
+    }
+
     return (
         <>
-            {/* Toolbar */}
+            {/* Selection toolbar */}
             <div className="prospects-toolbar">
-                <button className="btn-primary" onClick={() => { clearMessages(); setShowAddModal(true); }}>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                        <path d="M8 3v10M3 8h10" />
-                    </svg>
-                    Add Prospect
-                </button>
+                {selectedIds.size > 0 ? (
+                    <div className="selection-toolbar">
+                        <span className="selection-count">
+                            {selectedIds.size} selected
+                        </span>
+                        <button
+                            className="btn-primary btn-sm"
+                            onClick={() => setShowCampaignModal(true)}
+                        >
+                            Add to Campaign
+                        </button>
+                        <button
+                            className="btn-secondary btn-sm"
+                            onClick={() => setSelectedIds(new Set())}
+                        >
+                            Clear
+                        </button>
+                    </div>
+                ) : (
+                    <button className="btn-primary" onClick={() => { clearMessages(); setShowAddModal(true); }}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                            <path d="M8 3v10M3 8h10" />
+                        </svg>
+                        Add Prospect
+                    </button>
+                )}
             </div>
+
+            {/* Filter chips */}
+            {(uniqueRoles.length > 0 || uniqueCompanies.length > 0) && (
+                <div className="filter-chips-bar">
+                    {uniqueRoles.length > 0 && (
+                        <div className="filter-chip-group">
+                            <span className="filter-chip-label">Role:</span>
+                            {uniqueRoles.slice(0, 8).map((r) => (
+                                <button
+                                    key={r}
+                                    className={`filter-chip ${activeRole === r ? "active" : ""}`}
+                                    onClick={() => setFilter("role", activeRole === r ? "" : r)}
+                                >
+                                    {r}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                    {uniqueCompanies.length > 0 && (
+                        <div className="filter-chip-group">
+                            <span className="filter-chip-label">Company:</span>
+                            {uniqueCompanies.slice(0, 8).map((c) => (
+                                <button
+                                    key={c}
+                                    className={`filter-chip ${activeCompany === c ? "active" : ""}`}
+                                    onClick={() => setFilter("company", activeCompany === c ? "" : c)}
+                                >
+                                    {c}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                    {(activeRole || activeCompany) && (
+                        <button
+                            className="filter-chip-clear"
+                            onClick={() => {
+                                const params = new URLSearchParams(searchParams.toString());
+                                params.delete("role");
+                                params.delete("company");
+                                params.set("page", "1");
+                                router.push(`/prospects?${params.toString()}`);
+                            }}
+                        >
+                            ✕ Clear filters
+                        </button>
+                    )}
+                </div>
+            )}
 
             {/* Toast messages */}
             {error && (
@@ -244,6 +362,15 @@ export function ProspectTable({ prospects, currentPage, totalPages, totalCount, 
                         <table className="data-table">
                             <thead>
                                 <tr>
+                                    <th style={{ width: 36 }}>
+                                        <input
+                                            type="checkbox"
+                                            className="row-checkbox"
+                                            checked={allSelected}
+                                            onChange={toggleAll}
+                                            title="Select all"
+                                        />
+                                    </th>
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Company</th>
@@ -253,7 +380,15 @@ export function ProspectTable({ prospects, currentPage, totalPages, totalCount, 
                             </thead>
                             <tbody>
                                 {prospects.map((p) => (
-                                    <tr key={p.id}>
+                                    <tr key={p.id} className={selectedIds.has(p.id) ? "row-selected" : ""}>
+                                        <td>
+                                            <input
+                                                type="checkbox"
+                                                className="row-checkbox"
+                                                checked={selectedIds.has(p.id)}
+                                                onChange={() => toggleOne(p.id)}
+                                            />
+                                        </td>
                                         <td className="cell-name">
                                             {highlightText([p.first_name, p.last_name].filter(Boolean).join(" ") || "—", searchQuery)}
                                         </td>
@@ -337,6 +472,18 @@ export function ProspectTable({ prospects, currentPage, totalPages, totalCount, 
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Add to Campaign modal */}
+                    {showCampaignModal && (
+                        <AddToCampaignModal
+                            prospectIds={Array.from(selectedIds)}
+                            onClose={() => setShowCampaignModal(false)}
+                            onDone={() => {
+                                setShowCampaignModal(false);
+                                setSelectedIds(new Set());
+                            }}
+                        />
+                    )}
 
                     {/* Pagination */}
                     {totalPages > 1 && (

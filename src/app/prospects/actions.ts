@@ -5,13 +5,19 @@ import { revalidatePath } from "next/cache";
 
 /**
  * Fetch prospects for the authenticated user.
- * Supports pagination and full-text search via the search_text tsvector column.
+ * Supports pagination, full-text search, and field filters.
  *
  * @param page     - 1-indexed page number
  * @param perPage  - results per page  
  * @param query    - optional search query (uses websearch_to_tsquery)
+ * @param filters  - optional field filters (role, company)
  */
-export async function getProspects(page = 1, perPage = 15, query?: string) {
+export async function getProspects(
+    page = 1,
+    perPage = 15,
+    query?: string,
+    filters?: { role?: string; company?: string }
+) {
     const supabase = await createClient();
     const {
         data: { user },
@@ -36,6 +42,14 @@ export async function getProspects(page = 1, perPage = 15, query?: string) {
             type: "websearch",
             config: "english",
         });
+    }
+
+    // Field filters
+    if (filters?.role) {
+        builder = builder.eq("role", filters.role);
+    }
+    if (filters?.company) {
+        builder = builder.eq("company_name", filters.company);
     }
 
     const { data, count, error } = await builder

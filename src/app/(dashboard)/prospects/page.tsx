@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 interface ProspectsPageProps {
-    searchParams: Promise<{ page?: string; q?: string }>;
+    searchParams: Promise<{ page?: string; q?: string; role?: string; company?: string }>;
 }
 
 export default async function ProspectsPage({ searchParams }: ProspectsPageProps) {
@@ -19,8 +19,10 @@ export default async function ProspectsPage({ searchParams }: ProspectsPageProps
     const page = Math.max(1, parseInt(params.page ?? "1", 10));
     const perPage = 15;
     const query = params.q?.trim() || undefined;
+    const role = params.role?.trim() || undefined;
+    const company = params.company?.trim() || undefined;
 
-    const { data: prospects, count, error } = await getProspects(page, perPage, query);
+    const { data: prospects, count, error } = await getProspects(page, perPage, query, { role, company });
 
     if (error && error !== "Not authenticated") {
         throw new Error(error);
@@ -44,3 +46,4 @@ export default async function ProspectsPage({ searchParams }: ProspectsPageProps
         </>
     );
 }
+
