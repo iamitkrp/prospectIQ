@@ -1,5 +1,6 @@
 import { getProspects } from "@/app/prospects/actions";
 import { ProspectTable } from "@/components/prospects/prospect-table";
+import { ProspectsHeader } from "@/components/prospects/prospects-header";
 import "./prospects.css";
 import type { Metadata } from "next";
 
@@ -27,12 +28,7 @@ export default async function ProspectsPage({ searchParams }: ProspectsPageProps
 
     return (
         <>
-            <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                    <h1 className="page-title">Prospects</h1>
-                    <p className="page-subtitle">{count} contact{count !== 1 ? "s" : ""} in your database</p>
-                </div>
-            </div>
+            <ProspectsHeader count={count ?? 0} />
 
             <ProspectTable
                 prospects={prospects}
