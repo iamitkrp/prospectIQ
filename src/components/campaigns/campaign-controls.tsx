@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Campaign } from "@/types/database";
-import { updateCampaignStatus } from "@/app/campaigns/actions";
+import { updateCampaignStatus, startCampaign } from "@/app/campaigns/actions";
 import { AddProspectsModal } from "./add-prospects-modal";
 
 interface CampaignControlsProps {
@@ -24,6 +24,19 @@ export function CampaignControls({ campaign, prospectCount: initialCount, stepCo
         const { error } = await updateCampaignStatus(campaign.id, newStatus);
         if (!error) {
             setStatus(newStatus);
+        }
+        setUpdating(false);
+        router.refresh();
+    }
+
+    async function handleStartCampaign() {
+        setUpdating(true);
+        const { error, triggered } = await startCampaign(campaign.id);
+        if (error) {
+            alert(`Failed to start: ${error}`);
+        } else {
+            setStatus("ACTIVE");
+            alert(`🚀 Campaign started! Step 1 triggered for ${triggered} prospect${triggered !== 1 ? "s" : ""}.`);
         }
         setUpdating(false);
         router.refresh();
@@ -58,7 +71,7 @@ export function CampaignControls({ campaign, prospectCount: initialCount, stepCo
                     {isDraft && (
                         <button
                             className={`btn-primary btn-sm ${!canActivate ? "btn-disabled-hint" : ""}`}
-                            onClick={() => canActivate && handleStatusChange("ACTIVE")}
+                            onClick={() => canActivate && handleStartCampaign()}
                             disabled={!canActivate || updating}
                             title={
                                 !canActivate

@@ -415,3 +415,96 @@ export async function removeProspectFromCampaign(
 
     return { error: null };
 }
+
+/**
+ * Start a campaign: set status to ACTIVE, then trigger Step 1
+ * for every assigned prospect via the execute endpoint.
+ */
+export async function startCampaign(
+    campaignId: string
+): Promise<{ error: string | null; triggered: number }> {
+    const supabase = await createClient();
+    const {
+        data: { user },
+        error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+        return { error: "Not authenticated", triggered: 0 };
+    }
+
+    // 1. Verify campaign is DRAFT and belongs to user
+    const { data: campaign, error: campErr } = await supabase
+        .from("campaigns")
+        .select("id, status")
+        .eq("id", campaignId)
+        .single();
+
+    if (campErr || !campaign) {
+        return { error: "Campaign not found", triggered: 0 };
+    }
+
+    if (campaign.status !== "DRAFT") {
+        return { error: "Campaign is not in DRAFT status", triggered: 0 };
+    }
+
+    // 2. Set status to ACTIVE
+    const { error: updateErr } = await supabase
+        .from("campaigns")
+        .update({ status: "ACTIVE" })
+        .eq("id", campaignId);
+
+    if (updateErr) {
+        return { error: updateErr.message, triggered: 0 };
+    }
+
+    // 3. Fetch all assigned prospect IDs
+    const { data: cpRows, error: cpErr } = await supabase
+        .from("campaign_prospects")
+        .select("prospect_id")
+        .eq("campaign_id", campaignId);
+
+    if (cpErr || !cpRows?.length) {
+        return { error: cpErr?.message ?? "No prospects assigned", triggered: 0 };
+    }
+
+    // 4. Call the execute endpoint for each prospect (Step 1)
+    const appUrl =
+        process.env.NEXT_PUBLIC_APP_URL ??
+        (process.env.VERCEL_URL
+            ? `https://${process.env.VERCEL_URL}`
+            : "http://localhost:3000");
+
+    const internalSecret = process.env.CAMPAIGN_INTERNAL_SECRET ?? "";
+
+    let triggered = 0;
+
+    // Fire all Step 1 calls concurrently
+    const results = await Promise.allSettled(
+        cpRows.map((row) =>
+            fetch(`${appUrl}/api/campaign/execute`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-campaign-secret": internalSecret,
+                },
+                body: JSON.stringify({
+                    campaignId,
+                    prospectId: row.prospect_id,
+                    stepOrder: 1,
+                }),
+            })
+        )
+    );
+
+    for (const r of results) {
+        if (r.status === "fulfilled" && r.value.ok) {
+            triggered++;
+        }
+    }
+
+    console.log(`[startCampaign] Triggered ${triggered}/${cpRows.length} prospects for campaign ${campaignId}`);
+
+    return { error: null, triggered };
+}
+
