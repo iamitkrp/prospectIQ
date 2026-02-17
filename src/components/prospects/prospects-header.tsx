@@ -3,21 +3,32 @@
 import { useState, useCallback } from "react";
 import { ImportCsvButton } from "@/components/prospects/import-csv-button";
 import type { CsvParseResult } from "@/components/prospects/csv-import-modal";
+import { ColumnMappingModal } from "@/components/prospects/column-mapping-modal";
+import type { ValidatedRow } from "@/components/prospects/csv-validation";
 
 interface ProspectsHeaderProps {
     count: number;
 }
 
+type ImportStage =
+    | { step: "idle" }
+    | { step: "parsed"; data: CsvParseResult }
+    | { step: "mapped"; rows: ValidatedRow[]; fileName: string };
+
 /**
  * Client component for the prospects page header.
- * Holds import state and shows parsed CSV summary.
+ * Manages the full CSV import flow: parse → map → validate → ready.
  */
 export function ProspectsHeader({ count }: ProspectsHeaderProps) {
-    const [importResult, setImportResult] = useState<CsvParseResult | null>(null);
+    const [stage, setStage] = useState<ImportStage>({ step: "idle" });
 
     const handleParsed = useCallback((result: CsvParseResult) => {
-        setImportResult(result);
-        console.log("[import] Parsed CSV:", result.headers, `${result.totalRows} rows`);
+        setStage({ step: "parsed", data: result });
+    }, []);
+
+    const handleValidated = useCallback((rows: ValidatedRow[], fileName: string) => {
+        setStage({ step: "mapped", rows, fileName });
+        console.log(`[import] ${rows.length} validated rows ready for import`);
     }, []);
 
     return (
@@ -30,25 +41,37 @@ export function ProspectsHeader({ count }: ProspectsHeaderProps) {
                 <ImportCsvButton onParsed={handleParsed} />
             </div>
 
-            {importResult && (
+            {/* Column Mapping Modal */}
+            {stage.step === "parsed" && (
+                <ColumnMappingModal
+                    parsed={stage.data}
+                    onClose={() => setStage({ step: "idle" })}
+                    onValidated={(rows) => handleValidated(rows, stage.data.fileName)}
+                />
+            )}
+
+            {/* Post-validation banner — ready for import */}
+            {stage.step === "mapped" && (
                 <div className="csv-import-banner">
                     <div className="csv-import-banner-left">
-                        <span className="csv-file-badge">📄 {importResult.fileName}</span>
-                        <span>{importResult.totalRows.toLocaleString()} rows · {importResult.headers.length} columns ready to import</span>
+                        <span className="csv-file-badge">📄 {stage.fileName}</span>
+                        <span>
+                            ✅ {stage.rows.length.toLocaleString()} prospect{stage.rows.length !== 1 ? "s" : ""} validated & ready to import
+                        </span>
                     </div>
                     <div className="csv-import-banner-actions">
                         <button
                             className="btn-secondary btn-sm"
-                            onClick={() => setImportResult(null)}
+                            onClick={() => setStage({ step: "idle" })}
                         >
                             Discard
                         </button>
                         <button
                             className="btn-primary btn-sm"
                             disabled
-                            title="Column mapping coming in 4.1.3"
+                            title="Batch import coming in 4.1.5"
                         >
-                            Map Columns →
+                            Import to Database →
                         </button>
                     </div>
                 </div>

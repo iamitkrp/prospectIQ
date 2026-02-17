@@ -962,3 +962,179 @@
     padding: 0.375rem 0.875rem;
     font-size: 0.8125rem;
 }
+
+/* ===========================================
+   Column Mapping Modal (4.1.3)
+   =========================================== */
+
+.mapping-modal {
+    max-width: 700px;
+}
+
+.mapping-subtitle {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin-top: 0.125rem;
+}
+
+.mapping-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.mapping-grid-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.75rem;
+    padding: 0.625rem 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.mapping-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background var(--transition-fast);
+}
+
+.mapping-row:last-child {
+    border-bottom: none;
+}
+
+.mapping-row:hover {
+    background: rgba(255, 255, 255, 0.015);
+}
+
+.mapping-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.mapping-field-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.mapping-required {
+    color: #f87171;
+    margin-left: 0.125rem;
+}
+
+.mapping-field-hint {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+}
+
+.mapping-select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 0.8125rem;
+    font-family: inherit;
+    cursor: pointer;
+    outline: none;
+    transition: border-color var(--transition-fast);
+    appearance: auto;
+}
+
+.mapping-select:focus {
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.mapping-sample {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+    font-style: italic;
+}
+
+/* ===========================================
+   Validation Summary (4.1.4)
+   =========================================== */
+
+.validation-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.validation-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border: none;
+    cursor: default;
+    font-family: inherit;
+}
+
+.validation-stat.stat-good {
+    background: rgba(34, 197, 94, 0.1);
+    color: #4ade80;
+}
+
+.validation-stat.stat-bad {
+    background: rgba(239, 68, 68, 0.1);
+    color: #fca5a5;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.validation-stat.stat-bad:hover {
+    background: rgba(239, 68, 68, 0.15);
+}
+
+.validation-stat.stat-warn {
+    background: rgba(245, 158, 11, 0.1);
+    color: #fbbf24;
+}
+
+.validation-toggle {
+    font-size: 0.625rem;
+    margin-left: 0.25rem;
+}
+
+.validation-errors {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    border-radius: var(--radius-sm);
+    margin-bottom: 1rem;
+}
+
+.validation-errors-table {
+    font-size: 0.8125rem !important;
+}
+
+.validation-errors-table td {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
