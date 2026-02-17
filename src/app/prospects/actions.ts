@@ -4,10 +4,14 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 /**
- * Fetch all prospects for the authenticated user.
- * Sorted by newest first. Supports pagination.
+ * Fetch prospects for the authenticated user.
+ * Supports pagination and full-text search via the search_text tsvector column.
+ *
+ * @param page     - 1-indexed page number
+ * @param perPage  - results per page  
+ * @param query    - optional search query (uses websearch_to_tsquery)
  */
-export async function getProspects(page = 1, perPage = 15) {
+export async function getProspects(page = 1, perPage = 15, query?: string) {
     const supabase = await createClient();
     const {
         data: { user },
@@ -20,10 +24,21 @@ export async function getProspects(page = 1, perPage = 15) {
     const from = (page - 1) * perPage;
     const to = from + perPage - 1;
 
-    const { data, count, error } = await supabase
+    let builder = supabase
         .from("prospects")
         .select("*", { count: "exact" })
-        .eq("user_id", user.id)
+        .eq("user_id", user.id);
+
+    // Full-text search when query is provided
+    const trimmed = query?.trim();
+    if (trimmed) {
+        builder = builder.textSearch("search_text", trimmed, {
+            type: "websearch",
+            config: "english",
+        });
+    }
+
+    const { data, count, error } = await builder
         .order("created_at", { ascending: false })
         .range(from, to);
 
