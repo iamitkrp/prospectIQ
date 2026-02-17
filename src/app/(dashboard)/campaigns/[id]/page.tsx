@@ -92,7 +92,7 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
             {/* Monitoring — only for non-DRAFT campaigns */}
             {!isDraft && (
                 <>
-                    <ProspectPipeline entries={pipeline} totalSteps={steps.length} />
+                    <ProspectPipeline entries={pipeline} totalSteps={steps.length} campaignId={id} />
                     <ActivityLog entries={activity} />
                 </>
             )}

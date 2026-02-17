@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { qstash } from "@/lib/qstash";
 import type { Campaign, CampaignStep, Prospect } from "@/types/database";
 
 /**
@@ -637,5 +638,150 @@ export async function getCampaignProspectPipeline(
             last_sent_at: latest?.sent_at ?? null,
         };
     });
+}
+
+/**
+ * Pause a campaign: set status to PAUSED and cancel all pending QStash messages.
+ */
+export async function pauseCampaign(
+    campaignId: string
+): Promise<{ error: string | null; cancelled: number }> {
+    const supabase = await createClient();
+    const {
+        data: { user },
+        error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+        return { error: "Not authenticated", cancelled: 0 };
+    }
+
+    // 1. Set status to PAUSED
+    const { error: updateErr } = await supabase
+        .from("campaigns")
+        .update({ status: "PAUSED" })
+        .eq("id", campaignId);
+
+    if (updateErr) {
+        return { error: updateErr.message, cancelled: 0 };
+    }
+
+    // 2. Find all pending QStash message IDs for this campaign
+    const { data: logs } = await supabase
+        .from("email_logs")
+        .select("id, qstash_message_id")
+        .eq("campaign_id", campaignId)
+        .not("qstash_message_id", "is", null);
+
+    if (!logs?.length) {
+        return { error: null, cancelled: 0 };
+    }
+
+    // 3. Cancel each QStash message
+    let cancelled = 0;
+    for (const log of logs) {
+        if (!log.qstash_message_id) continue;
+        try {
+            await qstash.messages.delete(log.qstash_message_id);
+            cancelled++;
+            // Clear the message ID since it's been cancelled
+            await supabase
+                .from("email_logs")
+                .update({ qstash_message_id: null })
+                .eq("id", log.id);
+        } catch (err) {
+            // Message may have already been delivered or expired — that's fine
+            console.warn(`[pauseCampaign] Failed to cancel QStash message ${log.qstash_message_id}:`, err);
+        }
+    }
+
+    console.log(`[pauseCampaign] Paused campaign ${campaignId}, cancelled ${cancelled} QStash messages`);
+    return { error: null, cancelled };
+}
+
+/**
+ * Mark a prospect as "replied" within a campaign.
+ * Inserts a REPLIED email_log entry — the execute endpoint's reply-check guard
+ * will then skip this prospect for all future steps.
+ */
+export async function markAsReplied(
+    campaignId: string,
+    prospectId: string
+): Promise<{ error: string | null }> {
+    const supabase = await createClient();
+    const {
+        data: { user },
+        error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+        return { error: "Not authenticated" };
+    }
+
+    // Check if already marked as replied
+    const { data: existing } = await supabase
+        .from("email_logs")
+        .select("id")
+        .eq("campaign_id", campaignId)
+        .eq("prospect_id", prospectId)
+        .eq("status", "REPLIED")
+        .limit(1)
+        .maybeSingle();
+
+    if (existing) {
+        return { error: null }; // Already replied, no-op
+    }
+
+    // Get the first step ID (we just need a valid step reference)
+    const { data: step } = await supabase
+        .from("campaign_steps")
+        .select("id")
+        .eq("campaign_id", campaignId)
+        .order("step_order", { ascending: true })
+        .limit(1)
+        .single();
+
+    if (!step) {
+        return { error: "No steps found in campaign" };
+    }
+
+    // Insert a REPLIED log entry
+    const { error: insertErr } = await supabase
+        .from("email_logs")
+        .insert({
+            campaign_id: campaignId,
+            prospect_id: prospectId,
+            step_id: step.id,
+            status: "REPLIED",
+            sent_at: new Date().toISOString(),
+        });
+
+    if (insertErr) {
+        return { error: insertErr.message };
+    }
+
+    // Also cancel any pending QStash message for this prospect
+    const { data: pendingLogs } = await supabase
+        .from("email_logs")
+        .select("id, qstash_message_id")
+        .eq("campaign_id", campaignId)
+        .eq("prospect_id", prospectId)
+        .not("qstash_message_id", "is", null);
+
+    for (const log of pendingLogs ?? []) {
+        if (!log.qstash_message_id) continue;
+        try {
+            await qstash.messages.delete(log.qstash_message_id);
+            await supabase
+                .from("email_logs")
+                .update({ qstash_message_id: null })
+                .eq("id", log.id);
+        } catch {
+            // Already delivered or expired
+        }
+    }
+
+    console.log(`[markAsReplied] Prospect ${prospectId} marked as replied in campaign ${campaignId}`);
+    return { error: null };
 }
 

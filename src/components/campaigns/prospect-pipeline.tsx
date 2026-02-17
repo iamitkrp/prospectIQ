@@ -1,10 +1,14 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import type { PipelineEntry } from "@/app/campaigns/actions";
+import { markAsReplied } from "@/app/campaigns/actions";
 
 interface ProspectPipelineProps {
     entries: PipelineEntry[];
     totalSteps: number;
+    campaignId: string;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
@@ -27,7 +31,23 @@ function formatTime(iso: string | null): string {
     });
 }
 
-export function ProspectPipeline({ entries, totalSteps }: ProspectPipelineProps) {
+export function ProspectPipeline({ entries, totalSteps, campaignId }: ProspectPipelineProps) {
+    const router = useRouter();
+    const [repliedIds, setRepliedIds] = useState<Set<string>>(new Set());
+    const [loadingId, setLoadingId] = useState<string | null>(null);
+
+    async function handleMarkReplied(prospectId: string) {
+        setLoadingId(prospectId);
+        const { error } = await markAsReplied(campaignId, prospectId);
+        if (error) {
+            alert(`Failed: ${error}`);
+        } else {
+            setRepliedIds((prev) => new Set(prev).add(prospectId));
+        }
+        setLoadingId(null);
+        router.refresh();
+    }
+
     if (entries.length === 0) {
         return (
             <div className="pipeline-section">
@@ -51,11 +71,15 @@ export function ProspectPipeline({ entries, totalSteps }: ProspectPipelineProps)
                             <th>Progress</th>
                             <th>Status</th>
                             <th>Last Activity</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
                         {entries.map((e) => {
-                            const config = STATUS_CONFIG[e.last_status] ?? STATUS_CONFIG.WAITING;
+                            const isReplied = e.last_status === "REPLIED" || repliedIds.has(e.prospect_id);
+                            const config = isReplied
+                                ? STATUS_CONFIG.REPLIED
+                                : (STATUS_CONFIG[e.last_status] ?? STATUS_CONFIG.WAITING);
                             const progressPct = totalSteps > 0 ? (e.current_step / totalSteps) * 100 : 0;
 
                             return (
@@ -77,11 +101,23 @@ export function ProspectPipeline({ entries, totalSteps }: ProspectPipelineProps)
                                     </td>
                                     <td>
                                         <span className={`pipeline-badge ${config.className}`}>
-                                            {config.label}
+                                            {isReplied ? "Replied" : config.label}
                                         </span>
                                     </td>
                                     <td className="pipeline-time">
                                         {formatTime(e.last_sent_at)}
+                                    </td>
+                                    <td>
+                                        {!isReplied && (
+                                            <button
+                                                className="btn-ghost btn-xs"
+                                                onClick={() => handleMarkReplied(e.prospect_id)}
+                                                disabled={loadingId === e.prospect_id}
+                                                title="Mark this prospect as replied — stops their sequence"
+                                            >
+                                                {loadingId === e.prospect_id ? "…" : "💬 Replied"}
+                                            </button>
+                                        )}
                                     </td>
                                 </tr>
                             );

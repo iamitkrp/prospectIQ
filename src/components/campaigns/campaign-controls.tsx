@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Campaign } from "@/types/database";
-import { updateCampaignStatus, startCampaign } from "@/app/campaigns/actions";
+import { updateCampaignStatus, startCampaign, pauseCampaign } from "@/app/campaigns/actions";
 import { AddProspectsModal } from "./add-prospects-modal";
 
 interface CampaignControlsProps {
@@ -37,6 +37,19 @@ export function CampaignControls({ campaign, prospectCount: initialCount, stepCo
         } else {
             setStatus("ACTIVE");
             alert(`🚀 Campaign started! Step 1 triggered for ${triggered} prospect${triggered !== 1 ? "s" : ""}.`);
+        }
+        setUpdating(false);
+        router.refresh();
+    }
+
+    async function handlePauseCampaign() {
+        setUpdating(true);
+        const { error, cancelled } = await pauseCampaign(campaign.id);
+        if (error) {
+            alert(`Failed to pause: ${error}`);
+        } else {
+            setStatus("PAUSED");
+            alert(`⏸️ Campaign paused. ${cancelled} scheduled message${cancelled !== 1 ? "s" : ""} cancelled.`);
         }
         setUpdating(false);
         router.refresh();
@@ -90,7 +103,7 @@ export function CampaignControls({ campaign, prospectCount: initialCount, stepCo
                     {canPause && (
                         <button
                             className="btn-warning btn-sm"
-                            onClick={() => handleStatusChange("PAUSED")}
+                            onClick={() => handlePauseCampaign()}
                             disabled={updating}
                         >
                             {updating ? "Updating…" : "⏸️ Pause"}
