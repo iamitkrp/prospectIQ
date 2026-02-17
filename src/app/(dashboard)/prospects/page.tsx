@@ -22,7 +22,7 @@ export default async function ProspectsPage({ searchParams }: ProspectsPageProps
     const role = params.role?.trim() || undefined;
     const company = params.company?.trim() || undefined;
 
-    const { data: prospects, count, error } = await getProspects(page, perPage, query, { role, company });
+    const { data: prospects, count, durationMs, error } = await getProspects(page, perPage, query, { role, company });
 
     if (error && error !== "Not authenticated") {
         throw new Error(error);
@@ -34,7 +34,7 @@ export default async function ProspectsPage({ searchParams }: ProspectsPageProps
         <>
             <ProspectsHeader count={count ?? 0} />
 
-            <SearchBar resultCount={count ?? 0} />
+            <SearchBar resultCount={count ?? 0} queryTimeMs={durationMs ?? 0} />
 
             <ProspectTable
                 prospects={prospects}

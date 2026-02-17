@@ -6,14 +6,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 interface SearchBarProps {
     /** Current search result count */
     resultCount: number;
+    /** Query response time in ms (from server) */
+    queryTimeMs: number;
 }
 
 /**
  * Debounced search bar.
  * Updates the `q` URL search param after 300ms of inactivity.
- * Highlights matched term count in results.
+ * Shows result count and query response time.
  */
-export function SearchBar({ resultCount }: SearchBarProps) {
+export function SearchBar({ resultCount, queryTimeMs }: SearchBarProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const initialQuery = searchParams.get("q") ?? "";
@@ -80,14 +82,18 @@ export function SearchBar({ resultCount }: SearchBarProps) {
                 )}
             </div>
 
-            {hasQuery && !isSearching && (
+            {!isSearching && (
                 <div className="search-result-count">
-                    {resultCount === 0
-                        ? "No results found"
-                        : `${resultCount.toLocaleString()} result${resultCount !== 1 ? "s" : ""}`
-                    }
+                    {hasQuery ? (
+                        resultCount === 0
+                            ? <>No results found <span className="search-time">· {queryTimeMs}ms</span></>
+                            : <>{resultCount.toLocaleString()} result{resultCount !== 1 ? "s" : ""} <span className="search-time">· {queryTimeMs}ms</span></>
+                    ) : (
+                        <>{resultCount.toLocaleString()} prospect{resultCount !== 1 ? "s" : ""} <span className="search-time">· {queryTimeMs}ms</span></>
+                    )}
                 </div>
             )}
         </div>
     );
 }
+

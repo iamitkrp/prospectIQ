@@ -24,7 +24,7 @@ export async function getProspects(
     } = await supabase.auth.getUser();
 
     if (!user) {
-        return { data: [], count: 0, error: "Not authenticated" };
+        return { data: [], count: 0, durationMs: 0, error: "Not authenticated" };
     }
 
     const from = (page - 1) * perPage;
@@ -52,15 +52,19 @@ export async function getProspects(
         builder = builder.eq("company_name", filters.company);
     }
 
+    const start = performance.now();
+
     const { data, count, error } = await builder
         .order("created_at", { ascending: false })
         .range(from, to);
 
+    const durationMs = Math.round(performance.now() - start);
+
     if (error) {
-        return { data: [], count: 0, error: error.message };
+        return { data: [], count: 0, durationMs, error: error.message };
     }
 
-    return { data: data ?? [], count: count ?? 0, error: null };
+    return { data: data ?? [], count: count ?? 0, durationMs, error: null };
 }
 
 /**
