@@ -30,14 +30,20 @@ import { qstash } from "@/lib/qstash";
  *   0. Verify caller identity (QStash signature OR internal secret)
  *   1. Validate input
  *   2. Reply-check guard — skip if prospect already replied
+ *   2b. 24-hour guard — skip if email sent to this prospect within 24h
+ *   2c. Daily limit guard — skip if daily send limit reached
  *   3. Fetch campaign, step, and prospect data
  *   4. Generate email via Groq using step's prompt_template
  *   5. Send via Brevo
- *   6. Log to email_logs
+ *   6. Log to email_logs (classify permanent vs transient errors)
  *   7. Schedule next step via QStash (if one exists)
  */
 
 const SECONDS_PER_DAY = 86_400;
+const DAILY_SEND_LIMIT = parseInt(process.env.DAILY_SEND_LIMIT ?? "100", 10);
+
+/** Error codes that should NOT be retried by QStash */
+const PERMANENT_ERROR_CODES = new Set(["INVALID_EMAIL", "DAILY_LIMIT"]);
 
 /* ── QStash signature receiver (lazy-init to avoid crash if env is missing in dev) ── */
 let _receiver: Receiver | null = null;
@@ -154,6 +160,36 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ skipped: true, reason: "ALREADY_REPLIED" });
         }
 
+        /* ── 2b. 24-hour guard (3.3.5) ── */
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { data: recentSend } = await supabase
+            .from("email_logs")
+            .select("id")
+            .eq("prospect_id", prospectId)
+            .eq("status", "SENT")
+            .gte("sent_at", twentyFourHoursAgo)
+            .limit(1)
+            .maybeSingle();
+
+        if (recentSend) {
+            console.log(`[execute] Prospect ${prospectId} already emailed within 24h. Skipping.`);
+            return NextResponse.json({ skipped: true, reason: "RATE_LIMITED_24H" });
+        }
+
+        /* ── 2c. Daily send limit guard (3.3.6) ── */
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const { count: todaySent } = await supabase
+            .from("email_logs")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "SENT")
+            .gte("sent_at", todayStart.toISOString());
+
+        if ((todaySent ?? 0) >= DAILY_SEND_LIMIT) {
+            console.log(`[execute] Daily send limit (${DAILY_SEND_LIMIT}) reached. Skipping.`);
+            return NextResponse.json({ skipped: true, reason: "DAILY_LIMIT_REACHED" });
+        }
+
         /* ── 3. Fetch campaign step ── */
         const { data: step, error: stepErr } = await supabase
             .from("campaign_steps")
@@ -266,13 +302,24 @@ export async function POST(request: NextRequest) {
         }
 
         if (!sendResult.success) {
-            console.error(`[execute] Send failed: ${sendResult.error}`);
-            return NextResponse.json({
-                executed: true,
-                sent: false,
-                error: sendResult.error,
-                stepOrder,
-            });
+            const errorCode = sendResult.code ?? "UNKNOWN";
+            const isPermanent = PERMANENT_ERROR_CODES.has(errorCode);
+
+            console.error(`[execute] Send failed (${errorCode}, permanent=${isPermanent}): ${sendResult.error}`);
+
+            // Return 200 for permanent errors → QStash will NOT retry
+            // Return 500 for transient errors → QStash WILL retry (built-in backoff)
+            return NextResponse.json(
+                {
+                    executed: true,
+                    sent: false,
+                    error: sendResult.error,
+                    errorCode,
+                    permanent: isPermanent,
+                    stepOrder,
+                },
+                { status: isPermanent ? 200 : 500 }
+            );
         }
 
         console.log(`[execute] Step ${stepOrder} sent to ${prospect.email}`);
