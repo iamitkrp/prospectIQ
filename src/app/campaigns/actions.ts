@@ -508,3 +508,134 @@ export async function startCampaign(
     return { error: null, triggered };
 }
 
+/* ═══════════════════════════════════════════════
+   Campaign Monitoring (Sprint 3.3)
+   ═══════════════════════════════════════════════ */
+
+export interface ActivityEntry {
+    id: string;
+    prospect_name: string;
+    prospect_email: string;
+    step_order: number;
+    status: string;
+    sent_at: string | null;
+}
+
+/**
+ * Fetch campaign activity feed (email events), newest first.
+ */
+export async function getCampaignActivity(
+    campaignId: string
+): Promise<ActivityEntry[]> {
+    const supabase = await createClient();
+    const {
+        data: { user },
+        error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) return [];
+
+    const { data, error } = await supabase
+        .from("email_logs")
+        .select(`
+            id,
+            status,
+            sent_at,
+            prospect_id,
+            step_id,
+            prospects!inner( first_name, last_name, email ),
+            campaign_steps!inner( step_order )
+        `)
+        .eq("campaign_id", campaignId)
+        .order("sent_at", { ascending: false, nullsFirst: false })
+        .limit(100);
+
+    if (error || !data) {
+        console.error("[getCampaignActivity]", error);
+        return [];
+    }
+
+    return data.map((row: Record<string, unknown>) => {
+        const prospect = row.prospects as { first_name: string | null; last_name: string | null; email: string } | null;
+        const step = row.campaign_steps as { step_order: number } | null;
+        return {
+            id: row.id as string,
+            prospect_name: [prospect?.first_name, prospect?.last_name].filter(Boolean).join(" ") || "Unknown",
+            prospect_email: prospect?.email ?? "",
+            step_order: step?.step_order ?? 0,
+            status: row.status as string,
+            sent_at: row.sent_at as string | null,
+        };
+    });
+}
+
+export interface PipelineEntry {
+    prospect_id: string;
+    name: string;
+    email: string;
+    current_step: number;
+    last_status: string;
+    last_sent_at: string | null;
+}
+
+/**
+ * Build the prospect pipeline — where each prospect stands in the campaign sequence.
+ */
+export async function getCampaignProspectPipeline(
+    campaignId: string,
+    totalSteps: number
+): Promise<PipelineEntry[]> {
+    const supabase = await createClient();
+    const {
+        data: { user },
+        error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) return [];
+
+    // 1. Get all assigned prospects
+    const { data: cpRows } = await supabase
+        .from("campaign_prospects")
+        .select("prospect_id, prospects!inner( first_name, last_name, email )")
+        .eq("campaign_id", campaignId);
+
+    if (!cpRows?.length) return [];
+
+    // 2. Get all email logs for this campaign
+    const { data: logs } = await supabase
+        .from("email_logs")
+        .select("prospect_id, status, sent_at, campaign_steps!inner( step_order )")
+        .eq("campaign_id", campaignId)
+        .order("sent_at", { ascending: false, nullsFirst: false });
+
+    // 3. Build a map: prospectId → latest log
+    const logMap = new Map<string, { step_order: number; status: string; sent_at: string | null }>();
+    for (const log of (logs ?? []) as Array<Record<string, unknown>>) {
+        const pid = log.prospect_id as string;
+        if (!logMap.has(pid)) {
+            const step = log.campaign_steps as { step_order: number } | null;
+            logMap.set(pid, {
+                step_order: step?.step_order ?? 0,
+                status: log.status as string,
+                sent_at: log.sent_at as string | null,
+            });
+        }
+    }
+
+    // 4. Build pipeline entries
+    return cpRows.map((row: Record<string, unknown>) => {
+        const pid = row.prospect_id as string;
+        const prospect = row.prospects as { first_name: string | null; last_name: string | null; email: string } | null;
+        const latest = logMap.get(pid);
+
+        return {
+            prospect_id: pid,
+            name: [prospect?.first_name, prospect?.last_name].filter(Boolean).join(" ") || "Unknown",
+            email: prospect?.email ?? "",
+            current_step: latest?.step_order ?? 0,
+            last_status: latest?.status ?? "WAITING",
+            last_sent_at: latest?.sent_at ?? null,
+        };
+    });
+}
+

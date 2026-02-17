@@ -609,3 +609,216 @@
     display: flex;
     gap: 0.5rem;
 }
+
+/* ===========================================
+   Activity Log — Terminal View (3.3.1)
+   =========================================== */
+
+.section-label {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.activity-log {
+    margin-bottom: 1.5rem;
+}
+
+.activity-empty {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+}
+
+.activity-terminal {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 0.5rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.activity-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.625rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    transition: background var(--transition-fast);
+}
+
+.activity-row:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.activity-time {
+    font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    min-width: 110px;
+    flex-shrink: 0;
+}
+
+.activity-status {
+    font-weight: 600;
+    min-width: 70px;
+    font-size: 0.75rem;
+}
+
+.log-status-sent {
+    color: var(--green-400, #4ade80);
+}
+
+.log-status-failed {
+    color: var(--red-400, #f87171);
+}
+
+.log-status-replied {
+    color: var(--blue-400, #60a5fa);
+}
+
+.log-status-pending {
+    color: var(--text-muted);
+}
+
+.activity-step {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    min-width: 50px;
+}
+
+.activity-prospect {
+    color: var(--text-primary);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ===========================================
+   Prospect Pipeline — God View (3.3.2)
+   =========================================== */
+
+.pipeline-section {
+    margin-bottom: 1.5rem;
+}
+
+.pipeline-empty {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+}
+
+.pipeline-table-wrap {
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.pipeline-name {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.pipeline-email {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pipeline-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pipeline-bar {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 3px;
+    overflow: hidden;
+    min-width: 60px;
+}
+
+.pipeline-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.pipeline-bar-fill.pipe-sent {
+    background: var(--green-400, #4ade80);
+}
+
+.pipeline-bar-fill.pipe-failed {
+    background: var(--red-400, #f87171);
+}
+
+.pipeline-bar-fill.pipe-replied {
+    background: var(--blue-400, #60a5fa);
+}
+
+.pipeline-bar-fill.pipe-waiting {
+    background: var(--text-muted);
+}
+
+.pipeline-step-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    min-width: 28px;
+    text-align: right;
+}
+
+.pipeline-badge {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.pipeline-badge.pipe-sent {
+    background: rgba(74, 222, 128, 0.12);
+    color: #4ade80;
+}
+
+.pipeline-badge.pipe-failed {
+    background: rgba(248, 113, 113, 0.12);
+    color: #f87171;
+}
+
+.pipeline-badge.pipe-replied {
+    background: rgba(96, 165, 250, 0.12);
+    color: #60a5fa;
+}
+
+.pipeline-badge.pipe-waiting {
+    background: rgba(148, 163, 184, 0.12);
+    color: #94a3b8;
+}
+
+.pipeline-time {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}

@@ -1,6 +1,13 @@
-import { getCampaignWithSteps, getCampaignProspectCount } from "@/app/campaigns/actions";
+import {
+    getCampaignWithSteps,
+    getCampaignProspectCount,
+    getCampaignActivity,
+    getCampaignProspectPipeline,
+} from "@/app/campaigns/actions";
 import { StepBuilder } from "@/components/campaigns/step-builder";
 import { CampaignControls } from "@/components/campaigns/campaign-controls";
+import { ActivityLog } from "@/components/campaigns/activity-log";
+import { ProspectPipeline } from "@/components/campaigns/prospect-pipeline";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import "../campaigns.css";
@@ -44,6 +51,15 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
         year: "numeric",
     });
 
+    // Fetch monitoring data for non-DRAFT campaigns
+    const isDraft = campaign.status === "DRAFT";
+    const [activity, pipeline] = isDraft
+        ? [[], []]
+        : await Promise.all([
+            getCampaignActivity(id),
+            getCampaignProspectPipeline(id, steps.length),
+        ]);
+
     return (
         <>
             {/* Breadcrumb */}
@@ -72,6 +88,14 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
                 prospectCount={prospectCount}
                 stepCount={steps.length}
             />
+
+            {/* Monitoring — only for non-DRAFT campaigns */}
+            {!isDraft && (
+                <>
+                    <ProspectPipeline entries={pipeline} totalSteps={steps.length} />
+                    <ActivityLog entries={activity} />
+                </>
+            )}
 
             {/* Step Builder */}
             <StepBuilder
