@@ -13,9 +13,23 @@ interface ProspectTableProps {
     currentPage: number;
     totalPages: number;
     totalCount: number;
+    searchQuery?: string;
 }
 
-export function ProspectTable({ prospects, currentPage, totalPages, totalCount }: ProspectTableProps) {
+/** Highlight matched search terms by wrapping them in <mark> */
+function highlightText(text: string, query?: string): React.ReactNode {
+    if (!query || !text) return text;
+    // Extract words from the query, ignoring quotes
+    const words = query.replace(/["']/g, "").split(/\s+/).filter(Boolean);
+    if (words.length === 0) return text;
+    const pattern = new RegExp(`(${words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "gi");
+    const parts = text.split(pattern);
+    return parts.map((part, i) =>
+        pattern.test(part) ? <mark key={i} className="search-highlight">{part}</mark> : part
+    );
+}
+
+export function ProspectTable({ prospects, currentPage, totalPages, totalCount, searchQuery }: ProspectTableProps) {
     const router = useRouter();
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingProspect, setEditingProspect] = useState<Prospect | null>(null);
@@ -241,11 +255,11 @@ export function ProspectTable({ prospects, currentPage, totalPages, totalCount }
                                 {prospects.map((p) => (
                                     <tr key={p.id}>
                                         <td className="cell-name">
-                                            {[p.first_name, p.last_name].filter(Boolean).join(" ") || "—"}
+                                            {highlightText([p.first_name, p.last_name].filter(Boolean).join(" ") || "—", searchQuery)}
                                         </td>
                                         <td className="cell-email">{p.email}</td>
-                                        <td>{p.company_name || "—"}</td>
-                                        <td>{p.role || "—"}</td>
+                                        <td>{highlightText(p.company_name || "—", searchQuery)}</td>
+                                        <td>{highlightText(p.role || "—", searchQuery)}</td>
                                         <td>
                                             <div className="row-actions">
                                                 <button

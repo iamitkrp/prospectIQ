@@ -1223,3 +1223,80 @@
 .import-errors-list li:last-child {
     border-bottom: none;
 }
+
+/* ===========================================
+   Search Bar (4.2.1)
+   =========================================== */
+
+.search-bar-wrapper {
+    margin-bottom: 1.25rem;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.625rem 1rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-fast);
+}
+
+.search-bar:focus-within {
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.search-bar-icon {
+    font-size: 0.875rem;
+    flex-shrink: 0;
+}
+
+.search-bar-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    font-family: inherit;
+}
+
+.search-bar-input::placeholder {
+    color: var(--text-muted);
+}
+
+.search-bar-clear {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 0.25rem;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.search-bar-clear:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.search-result-count {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    padding-left: 0.25rem;
+}
+
+/* ===========================================
+   Search Highlight (4.2.3)
+   =========================================== */
+
+.search-highlight {
+    background: rgba(250, 204, 21, 0.25);
+    color: var(--text-primary);
+    padding: 0.0625rem 0.125rem;
+    border-radius: 2px;
+}
