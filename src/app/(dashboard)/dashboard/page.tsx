@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getUser } from "@/app/auth/actions";
+import { getDashboardStats } from "@/app/dashboard/actions";
 import type { Metadata } from "next";
+import "./dashboard.css";
 
 export const metadata: Metadata = {
     title: "Dashboard — ProspectIQ",
@@ -9,8 +11,12 @@ export const metadata: Metadata = {
 
 export default async function DashboardPage() {
     const user = await getUser();
-
     const firstName = user?.email?.split("@")[0] ?? "there";
+
+    const { data: stats } = await getDashboardStats();
+
+    const dailyLimit = parseInt(process.env.DAILY_SEND_LIMIT ?? "300", 10);
+    const remaining = Math.max(0, dailyLimit - (stats?.emailsSentToday ?? 0));
 
     return (
         <>
@@ -25,27 +31,78 @@ export default async function DashboardPage() {
             <div className="stats-grid">
                 <div className="stat-card">
                     <div className="stat-label">Total Prospects</div>
-                    <div className="stat-value">0</div>
+                    <div className="stat-value">{stats?.totalProspects?.toLocaleString() ?? 0}</div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-label">Active Campaigns</div>
-                    <div className="stat-value">0</div>
+                    <div className="stat-value">{stats?.activeCampaigns ?? 0}</div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-label">Emails Sent Today</div>
-                    <div className="stat-value">0</div>
-                    <div className="stat-change positive">↑ 300 remaining</div>
+                    <div className="stat-value">{stats?.emailsSentToday ?? 0}</div>
+                    <div className="stat-change positive">↑ {remaining} remaining</div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-label">Reply Rate</div>
-                    <div className="stat-value">—</div>
+                    <div className="stat-value">
+                        {stats?.replyRate !== null && stats?.replyRate !== undefined ? `${stats.replyRate}%` : "—"}
+                    </div>
                 </div>
             </div>
 
+            {/* Campaign Analytics (4.3.2) */}
+            {stats?.campaignAnalytics && stats.campaignAnalytics.length > 0 && (
+                <>
+                    <h2 className="section-title">Campaign Analytics</h2>
+                    <div className="table-wrapper">
+                        <table className="data-table campaign-analytics-table">
+                            <thead>
+                                <tr>
+                                    <th>Campaign</th>
+                                    <th>Status</th>
+                                    <th>Prospects</th>
+                                    <th>Sent</th>
+                                    <th>Pending</th>
+                                    <th>Failed</th>
+                                    <th>Replied</th>
+                                    <th>Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {stats.campaignAnalytics.map((c) => {
+                                    const total = c.sent + c.replied;
+                                    const rate = total > 0 ? Math.round((c.replied / total) * 100) : null;
+                                    return (
+                                        <tr key={c.campaignId}>
+                                            <td className="cell-name">
+                                                <Link href={`/campaigns/${c.campaignId}`} className="analytics-link">
+                                                    {c.campaignName}
+                                                </Link>
+                                            </td>
+                                            <td>
+                                                <span className={`status-badge status-${c.status.toLowerCase()}`}>
+                                                    {c.status}
+                                                </span>
+                                            </td>
+                                            <td className="num-cell">{c.prospectCount}</td>
+                                            <td className="num-cell sent">{c.sent}</td>
+                                            <td className="num-cell pending">{c.pending}</td>
+                                            <td className="num-cell failed">{c.failed}</td>
+                                            <td className="num-cell replied">{c.replied}</td>
+                                            <td className="num-cell">
+                                                {rate !== null ? `${rate}%` : "—"}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </>
+            )}
+
             {/* Quick Actions */}
-            <h2 style={{ fontSize: "1.125rem", fontWeight: 600, marginBottom: "1rem", color: "var(--text-primary)" }}>
-                Quick Actions
-            </h2>
+            <h2 className="section-title">Quick Actions</h2>
             <div className="quick-actions">
                 <Link href="/prospects" className="quick-action-card">
                     <div className="quick-action-icon purple">
@@ -75,16 +132,16 @@ export default async function DashboardPage() {
                     </div>
                 </Link>
 
-                <Link href="/prospects/import" className="quick-action-card">
+                <Link href="/guide" className="quick-action-card">
                     <div className="quick-action-icon blue">
                         <svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M14 2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2z" />
-                            <path d="M10 7v6M7 10h6" />
+                            <path d="M7 7h6M7 10h6M7 13h4" />
                         </svg>
                     </div>
                     <div>
-                        <div className="quick-action-title">Import CSV</div>
-                        <div className="quick-action-desc">Bulk import prospects from a file</div>
+                        <div className="quick-action-title">Setup Guide</div>
+                        <div className="quick-action-desc">Follow the step-by-step walkthrough</div>
                     </div>
                 </Link>
             </div>
