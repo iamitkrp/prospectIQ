@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export default function DashboardError({
     error,
     reset,
@@ -8,29 +10,23 @@ export default function DashboardError({
     reset: () => void;
 }) {
     return (
-        <div style={{ maxWidth: "480px" }}>
-            <div className="page-header">
-                <h1 className="page-title">Something went wrong</h1>
-                <p className="page-subtitle">
-                    {error.message || "An unexpected error occurred while loading this page."}
-                </p>
+        <div className="error-boundary">
+            <div className="error-icon">⚠️</div>
+            <h1 className="error-title">Something went wrong</h1>
+            <p className="error-message">
+                {error.message || "An unexpected error occurred while loading this page."}
+            </p>
+            {error.digest && (
+                <p className="error-digest">Error ID: {error.digest}</p>
+            )}
+            <div className="error-actions">
+                <button onClick={reset} className="error-btn primary">
+                    Try Again
+                </button>
+                <Link href="/dashboard" className="error-btn secondary">
+                    Go to Dashboard
+                </Link>
             </div>
-            <button
-                onClick={reset}
-                style={{
-                    padding: "0.625rem 1.5rem",
-                    background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-                    color: "#fff",
-                    fontWeight: 600,
-                    fontSize: "0.875rem",
-                    border: "none",
-                    borderRadius: "10px",
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                }}
-            >
-                Try again
-            </button>
         </div>
     );
 }

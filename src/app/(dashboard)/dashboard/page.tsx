@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getUser } from "@/app/auth/actions";
-import { getDashboardStats } from "@/app/dashboard/actions";
+import { getDashboardStats, getEmailActivity, getBrevoQuota } from "@/app/dashboard/actions";
+import { EmailActivityChart } from "@/components/dashboard/email-activity-chart";
+import { BrevoQuotaWidget } from "@/components/dashboard/brevo-quota-widget";
 import type { Metadata } from "next";
 import "./dashboard.css";
 
@@ -14,6 +16,8 @@ export default async function DashboardPage() {
     const firstName = user?.email?.split("@")[0] ?? "there";
 
     const { data: stats } = await getDashboardStats();
+    const { data: activity } = await getEmailActivity();
+    const { data: quota } = await getBrevoQuota();
 
     const dailyLimit = parseInt(process.env.DAILY_SEND_LIMIT ?? "300", 10);
     const remaining = Math.max(0, dailyLimit - (stats?.emailsSentToday ?? 0));
@@ -100,6 +104,11 @@ export default async function DashboardPage() {
                     </div>
                 </>
             )}
+            {/* Email Activity Chart + Quota Widget (4.3.3 + 4.3.4) */}
+            <div className="dashboard-widgets">
+                <EmailActivityChart data={activity ?? []} />
+                {quota && <BrevoQuotaWidget quota={quota} />}
+            </div>
 
             {/* Quick Actions */}
             <h2 className="section-title">Quick Actions</h2>

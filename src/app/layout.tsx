@@ -13,8 +13,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ProspectIQ — Zero-Cost Outreach Engine",
-  description: "Discover prospects, generate AI-powered emails, and automate outreach sequences — all on free-tier infrastructure.",
+  title: {
+    default: "ProspectIQ — Zero-Cost Outreach Engine",
+    template: "%s | ProspectIQ",
+  },
+  description:
+    "Discover prospects, generate AI-powered emails, and automate outreach sequences — all on free-tier infrastructure.",
+  openGraph: {
+    title: "ProspectIQ — Zero-Cost Outreach Engine",
+    description:
+      "Discover prospects, generate AI-powered emails, and automate outreach sequences — all on free-tier infrastructure.",
+    siteName: "ProspectIQ",
+    locale: "en_US",
+    type: "website",
+  },
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
 };
 
 export default function RootLayout({

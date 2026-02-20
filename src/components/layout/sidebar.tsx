@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/app/auth/actions";
@@ -64,62 +65,86 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <aside className="sidebar">
-      {/* Logo */}
-      <div className="sidebar-logo">
-        <div className="sidebar-logo-icon">
-          <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
-            <rect width="32" height="32" rx="8" fill="url(#sidebar-logo-grad)" />
-            <path d="M10 16L14 20L22 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            <defs>
-              <linearGradient id="sidebar-logo-grad" x1="0" y1="0" x2="32" y2="32">
-                <stop stopColor="#6366f1" />
-                <stop offset="1" stopColor="#8b5cf6" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
-        <span className="sidebar-logo-text">ProspectIQ</span>
-      </div>
+    <>
+      {/* Mobile hamburger */}
+      <button
+        className="mobile-menu-btn"
+        onClick={() => setMobileOpen(true)}
+        aria-label="Open menu"
+      >
+        <svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+          <path d="M3 5h14M3 10h14M3 15h14" />
+        </svg>
+      </button>
 
-      {/* Navigation */}
-      <nav className="sidebar-nav">
-        <ul className="sidebar-nav-list">
-          {navItems.map((item) => {
-            const isActive =
-              pathname === item.href || pathname.startsWith(item.href + "/");
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          className="sidebar-overlay"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
 
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={`sidebar-nav-item ${isActive ? "active" : ""}`}
-                >
-                  <span className="sidebar-nav-icon">{item.icon}</span>
-                  <span className="sidebar-nav-label">{item.label}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-
-      {/* Bottom */}
-      <div className="sidebar-bottom">
-        <EmailQuotaBadge />
-        <form action={signOut}>
-          <button type="submit" className="sidebar-signout">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M7 17H4a2 2 0 01-2-2V5a2 2 0 012-2h3" />
-              <path d="M14 14l4-4-4-4" />
-              <path d="M18 10H8" />
+      <aside className={`sidebar ${mobileOpen ? "open" : ""}`}>
+        {/* Logo */}
+        <div className="sidebar-logo">
+          <div className="sidebar-logo-icon">
+            <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+              <rect width="32" height="32" rx="8" fill="url(#sidebar-logo-grad)" />
+              <path d="M10 16L14 20L22 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              <defs>
+                <linearGradient id="sidebar-logo-grad" x1="0" y1="0" x2="32" y2="32">
+                  <stop stopColor="#6366f1" />
+                  <stop offset="1" stopColor="#8b5cf6" />
+                </linearGradient>
+              </defs>
             </svg>
-            <span>Sign Out</span>
-          </button>
-        </form>
-      </div>
-    </aside>
+          </div>
+          <span className="sidebar-logo-text">ProspectIQ</span>
+        </div>
+
+        {/* Navigation */}
+        <nav className="sidebar-nav">
+          <ul className="sidebar-nav-list">
+            {navItems.map((item) => {
+              const isActive =
+                pathname === item.href || pathname.startsWith(item.href + "/");
+
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={`sidebar-nav-item ${isActive ? "active" : ""}`}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <span className="sidebar-nav-icon">{item.icon}</span>
+                    <span className="sidebar-nav-label">{item.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        {/* Bottom */}
+        <div className="sidebar-bottom">
+          <EmailQuotaBadge />
+          <form action={signOut}>
+            <button type="submit" className="sidebar-signout">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7 17H4a2 2 0 01-2-2V5a2 2 0 012-2h3" />
+                <path d="M14 14l4-4-4-4" />
+                <path d="M18 10H8" />
+              </svg>
+              <span>Sign Out</span>
+            </button>
+          </form>
+        </div>
+      </aside>
+    </>
   );
 }
+

@@ -346,3 +346,227 @@
 .quota-badge.danger .quota-count {
     color: #dc2626;
 }
+
+/* Hide mobile-only elements on desktop */
+.mobile-menu-btn,
+.sidebar-overlay {
+    display: none;
+}
+
+/* ── Error Boundary (4.3.7) ── */
+
+.error-boundary {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    text-align: center;
+    padding: 2rem;
+    max-width: 480px;
+}
+
+.error-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.error-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.error-message {
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.error-digest {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: var(--font-geist-mono);
+    margin-bottom: 1.5rem;
+}
+
+.error-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.error-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.625rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: none;
+    transition: all var(--transition-fast);
+}
+
+.error-btn.primary {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+}
+
+.error-btn.primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.error-btn.secondary {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary);
+    border: 1px solid var(--border-default);
+}
+
+.error-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* ===========================================
+   RESPONSIVE — Tablet (≤ 1024px)
+   =========================================== */
+
+@media (max-width: 1024px) {
+    .app-main {
+        padding: 1.5rem 1.75rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ===========================================
+   RESPONSIVE — Mobile (≤ 768px)
+   Mi 11x viewport = 393px CSS width
+   =========================================== */
+
+@media (max-width: 768px) {
+
+    /* ── Mobile hamburger ── */
+    .mobile-menu-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        top: 0.75rem;
+        left: 0.75rem;
+        z-index: 100;
+        width: 40px;
+        height: 40px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-default);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        cursor: pointer;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 49;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(2px);
+    }
+
+    /* ── Sidebar: slide off-screen ── */
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform var(--transition-base);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+    }
+
+    /* ── App main: full width ── */
+    .app-main {
+        margin-left: 0;
+        padding: 1rem 1rem;
+        padding-top: 3.5rem;
+        /* space for mobile header bar */
+    }
+
+    /* ── Page header ── */
+    .page-header {
+        margin-bottom: 1.25rem;
+    }
+
+    .page-title {
+        font-size: 1.375rem;
+    }
+
+    .page-subtitle {
+        font-size: 0.8125rem;
+    }
+
+    /* ── Stat cards: 2-column on tablets, 1 on narrow phones ── */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .stat-card {
+        padding: 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    /* ── Quick actions: single column ── */
+    .quick-actions {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .quick-action-card {
+        padding: 1rem 1.25rem;
+    }
+
+    /* ── Tables: horizontal scroll ── */
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-left: -1rem;
+        margin-right: -1rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .data-table {
+        min-width: 600px;
+    }
+}
+
+/* ── Very narrow phones (≤ 420px / Mi 11x) ── */
+
+@media (max-width: 420px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        padding: 0.875rem;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+    }
+}
