@@ -40,7 +40,7 @@ import { qstash } from "@/lib/qstash";
  */
 
 const SECONDS_PER_DAY = 86_400;
-const DAILY_SEND_LIMIT = parseInt(process.env.DAILY_SEND_LIMIT ?? "100", 10);
+const DAILY_SEND_LIMIT = parseInt(process.env.DAILY_SEND_LIMIT ?? "300", 10);
 
 /** Error codes that should NOT be retried by QStash */
 const PERMANENT_ERROR_CODES = new Set(["INVALID_EMAIL", "DAILY_LIMIT"]);
