@@ -292,6 +292,74 @@
     border-radius: 999px;
 }
 
+.step-builder-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.step-info-toggle,
+.step-card-info-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.125rem 0.25rem;
+    border-radius: var(--radius-sm);
+    opacity: 0.5;
+    transition: opacity var(--transition-fast);
+}
+
+.step-info-toggle:hover,
+.step-card-info-btn:hover {
+    opacity: 1;
+}
+
+.step-guide-banner {
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.step-guide-banner ol {
+    padding-left: 1.25rem;
+    margin: 0.5rem 0;
+}
+
+.step-guide-banner li {
+    margin: 0.25rem 0;
+}
+
+.step-guide-tip {
+    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+    opacity: 0.85;
+}
+
+.step-info-panel {
+    background: rgba(99, 102, 241, 0.06);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.step-info-panel p {
+    margin: 0.25rem 0;
+}
+
+.step-info-panel strong {
+    color: var(--text-primary);
+}
+
 /* ── Timeline ── */
 
 .steps-timeline {

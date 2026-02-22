@@ -41,6 +41,7 @@ export function StepBuilder({ campaignId, initialSteps, readOnly }: StepBuilderP
     const [saving, setSaving] = useState<string | null>(null); // step id being saved
     const [adding, setAdding] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showGuide, setShowGuide] = useState(false);
 
     /* ── Add step ── */
     async function handleAdd() {
@@ -105,8 +106,29 @@ export function StepBuilder({ campaignId, initialSteps, readOnly }: StepBuilderP
                     </svg>
                     Email Sequence
                 </h2>
-                <span className="step-builder-count">{steps.length} step{steps.length !== 1 ? "s" : ""}</span>
+                <div className="step-builder-header-right">
+                    <span className="step-builder-count">{steps.length} step{steps.length !== 1 ? "s" : ""}</span>
+                    <button
+                        className="step-info-toggle"
+                        onClick={() => setShowGuide(!showGuide)}
+                        title="How does the email sequence work?"
+                    >
+                        ℹ️
+                    </button>
+                </div>
             </div>
+
+            {showGuide && (
+                <div className="step-guide-banner">
+                    <p><strong>How it works:</strong> Each step generates a personalized email using AI. When you launch the campaign:</p>
+                    <ol>
+                        <li><strong>Step 1</strong> sends immediately to all prospects in the campaign.</li>
+                        <li><strong>Follow-ups</strong> are scheduled automatically after the delay you set (e.g. 3 days after the previous step).</li>
+                        <li>The <strong>AI Prompt</strong> tells the AI what kind of email to write — it will personalize each email using the prospect&apos;s name, role, and company.</li>
+                    </ol>
+                    <p className="step-guide-tip">💡 <strong>Tip:</strong> 3 steps is the sweet spot — intro, follow-up, and breakup email.</p>
+                </div>
+            )}
 
             {error && <div className="alert-error" style={{ marginBottom: "0.75rem" }}>{error}</div>}
 
@@ -152,10 +174,32 @@ interface StepCardProps {
     onRemove: () => void;
 }
 
+const STEP_INFO: Record<string, { what: string; how: string }> = {
+    initial: {
+        what: "The first email each prospect receives. This is your cold outreach — make a strong first impression.",
+        how: "Sent immediately when you launch the campaign. The AI uses the prompt below plus the prospect's name, role, and company to generate a personalized email.",
+    },
+    followup: {
+        what: "A follow-up email for prospects who haven't replied. Keep it shorter and reference the previous email.",
+        how: "Automatically scheduled after the delay you set. Only sent to prospects who haven't replied to previous steps.",
+    },
+    breakup: {
+        what: "The final email — a polite 'breakup' that gives one last compelling reason to reply.",
+        how: "Scheduled after the delay. This is your last touch — keep it brief, friendly, and give them an easy out.",
+    },
+};
+
+function getStepInfo(index: number): { what: string; how: string } {
+    if (index === 0) return STEP_INFO.initial;
+    if (index >= 2) return STEP_INFO.breakup;
+    return STEP_INFO.followup;
+}
+
 function StepCard({ step, index, isFirst, saving, readOnly, onUpdate, onRemove }: StepCardProps) {
     const [delay, setDelay] = useState(step.delay_days);
     const [prompt, setPrompt] = useState(step.prompt_template ?? "");
     const [dirty, setDirty] = useState(false);
+    const [showInfo, setShowInfo] = useState(false);
 
     function handleDelayChange(val: number) {
         setDelay(val);
@@ -174,6 +218,7 @@ function StepCard({ step, index, isFirst, saving, readOnly, onUpdate, onRemove }
 
     const stepLabel = isFirst ? "📨 Initial Email" : `📩 Follow-up ${index}`;
     const delayLabel = delay === 0 ? "Sent immediately" : `Wait ${delay} day${delay !== 1 ? "s" : ""} after previous`;
+    const info = getStepInfo(index);
 
     return (
         <div className="step-card">
@@ -191,6 +236,13 @@ function StepCard({ step, index, isFirst, saving, readOnly, onUpdate, onRemove }
                 <div className="step-card-header">
                     <div className="step-number">Step {index + 1}</div>
                     <span className="step-type-label">{stepLabel}</span>
+                    <button
+                        className="step-card-info-btn"
+                        onClick={() => setShowInfo(!showInfo)}
+                        title="What does this step do?"
+                    >
+                        ℹ️
+                    </button>
                     {saving && <span className="step-saving">Saving…</span>}
                     {!readOnly && !saving && (
                         <button className="step-remove-btn" onClick={onRemove} title="Remove step">
@@ -198,6 +250,13 @@ function StepCard({ step, index, isFirst, saving, readOnly, onUpdate, onRemove }
                         </button>
                     )}
                 </div>
+
+                {showInfo && (
+                    <div className="step-info-panel">
+                        <p><strong>What:</strong> {info.what}</p>
+                        <p><strong>How:</strong> {info.how}</p>
+                    </div>
+                )}
 
                 {/* Delay picker */}
                 {!isFirst && !readOnly && (
