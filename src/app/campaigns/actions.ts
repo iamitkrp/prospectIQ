@@ -520,6 +520,8 @@ export interface ActivityEntry {
     step_order: number;
     status: string;
     sent_at: string | null;
+    subject: string | null;
+    body: string | null;
 }
 
 /**
@@ -542,6 +544,8 @@ export async function getCampaignActivity(
             id,
             status,
             sent_at,
+            subject,
+            body,
             prospect_id,
             step_id,
             prospects!inner( first_name, last_name, email ),
@@ -566,6 +570,8 @@ export async function getCampaignActivity(
             step_order: step?.step_order ?? 0,
             status: row.status as string,
             sent_at: row.sent_at as string | null,
+            subject: (row.subject as string | null) ?? null,
+            body: (row.body as string | null) ?? null,
         };
     });
 }

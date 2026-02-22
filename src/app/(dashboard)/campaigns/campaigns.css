@@ -579,6 +579,41 @@
    Campaign Controls (3.1.9)
    =========================================== */
 
+.campaign-message {
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.8125rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    line-height: 1.5;
+}
+
+.campaign-message-success {
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.25);
+    color: var(--green-400, #4ade80);
+}
+
+.campaign-message-error {
+    background: rgba(248, 113, 113, 0.1);
+    border: 1px solid rgba(248, 113, 113, 0.25);
+    color: var(--red-400, #f87171);
+}
+
+.campaign-message-dismiss {
+    margin-left: 1rem;
+    opacity: 0.5;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.campaign-message:hover .campaign-message-dismiss {
+    opacity: 1;
+}
+
 .campaign-controls {
     display: flex;
     align-items: center;
@@ -724,8 +759,48 @@
     transition: background var(--transition-fast);
 }
 
+.activity-row-clickable {
+    cursor: pointer;
+}
+
 .activity-row:hover {
     background: rgba(255, 255, 255, 0.03);
+}
+
+.activity-expand-hint {
+    margin-left: auto;
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    opacity: 0.6;
+    transition: opacity var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.activity-row:hover .activity-expand-hint {
+    opacity: 1;
+}
+
+.activity-email-preview {
+    background: rgba(99, 102, 241, 0.06);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    margin: 0.25rem 0 0.5rem 0;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+}
+
+.email-preview-subject {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.email-preview-body {
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .activity-time {
@@ -793,18 +868,85 @@
 .pipeline-table-wrap {
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
-    overflow: hidden;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--bg-surface);
+}
+
+.pipeline-table-wrap .prospects-table {
+    table-layout: fixed;
+    width: 100%;
+    min-width: 600px;
+}
+
+.pipeline-table-wrap .prospects-table th,
+.pipeline-table-wrap .prospects-table td {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8125rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.pipeline-table-wrap .prospects-table th {
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.pipeline-table-wrap .prospects-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.pipeline-table-wrap .prospects-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Column widths */
+.pipeline-table-wrap .prospects-table th:nth-child(1),
+.pipeline-table-wrap .prospects-table td:nth-child(1) {
+    width: 18%;
+}
+
+.pipeline-table-wrap .prospects-table th:nth-child(2),
+.pipeline-table-wrap .prospects-table td:nth-child(2) {
+    width: 25%;
+}
+
+.pipeline-table-wrap .prospects-table th:nth-child(3),
+.pipeline-table-wrap .prospects-table td:nth-child(3) {
+    width: 18%;
+}
+
+.pipeline-table-wrap .prospects-table th:nth-child(4),
+.pipeline-table-wrap .prospects-table td:nth-child(4) {
+    width: 12%;
+}
+
+.pipeline-table-wrap .prospects-table th:nth-child(5),
+.pipeline-table-wrap .prospects-table td:nth-child(5) {
+    width: 15%;
+}
+
+.pipeline-table-wrap .prospects-table th:nth-child(6),
+.pipeline-table-wrap .prospects-table td:nth-child(6) {
+    width: 12%;
+    text-align: right;
 }
 
 .pipeline-name {
     font-weight: 600;
+    color: var(--text-primary);
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .pipeline-email {
     color: var(--text-muted);
     font-size: 0.8125rem;
-    max-width: 180px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -818,16 +960,16 @@
 
 .pipeline-bar {
     flex: 1;
-    height: 6px;
+    height: 8px;
     background: rgba(255, 255, 255, 0.06);
-    border-radius: 3px;
+    border-radius: 4px;
     overflow: hidden;
-    min-width: 60px;
+    min-width: 50px;
 }
 
 .pipeline-bar-fill {
     height: 100%;
-    border-radius: 3px;
+    border-radius: 4px;
     transition: width 0.3s ease;
 }
 
@@ -853,11 +995,12 @@
     font-weight: 600;
     min-width: 28px;
     text-align: right;
+    flex-shrink: 0;
 }
 
 .pipeline-badge {
     display: inline-block;
-    padding: 0.125rem 0.5rem;
+    padding: 0.1875rem 0.5625rem;
     border-radius: 999px;
     font-size: 0.6875rem;
     font-weight: 600;

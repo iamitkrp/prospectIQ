@@ -18,38 +18,62 @@ export function CampaignControls({ campaign, prospectCount: initialCount, stepCo
     const [updating, setUpdating] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
     const [pCount, setPCount] = useState(initialCount);
+    const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+    function clearMessage() {
+        setMessage(null);
+    }
 
     async function handleStatusChange(newStatus: Campaign["status"]) {
+        clearMessage();
         setUpdating(true);
         const { error } = await updateCampaignStatus(campaign.id, newStatus);
-        if (!error) {
+        if (error) {
+            setMessage({ type: "error", text: `Failed to update status: ${error}` });
+        } else {
             setStatus(newStatus);
+            setMessage({ type: "success", text: `Campaign status changed to ${newStatus}.` });
         }
         setUpdating(false);
         router.refresh();
     }
 
     async function handleStartCampaign() {
+        clearMessage();
         setUpdating(true);
         const { error, triggered } = await startCampaign(campaign.id);
         if (error) {
-            alert(`Failed to start: ${error}`);
+            setMessage({ type: "error", text: `Failed to start campaign: ${error}` });
         } else {
             setStatus("ACTIVE");
-            alert(`🚀 Campaign started! Step 1 triggered for ${triggered} prospect${triggered !== 1 ? "s" : ""}.`);
+            if (triggered === 0) {
+                setMessage({
+                    type: "error",
+                    text: "Campaign set to ACTIVE but no emails were triggered. Check server logs and ensure CAMPAIGN_INTERNAL_SECRET is set.",
+                });
+            } else {
+                setMessage({
+                    type: "success",
+                    text: `🚀 Campaign started! Step 1 triggered for ${triggered} prospect${triggered !== 1 ? "s" : ""}. Check the Activity Log below for delivery status.`,
+                });
+            }
         }
         setUpdating(false);
         router.refresh();
     }
 
     async function handlePauseCampaign() {
+        clearMessage();
         setUpdating(true);
         const { error, cancelled } = await pauseCampaign(campaign.id);
         if (error) {
-            alert(`Failed to pause: ${error}`);
+            setMessage({ type: "error", text: `Failed to pause: ${error}` });
         } else {
             setStatus("PAUSED");
-            alert(`⏸️ Campaign paused. ${cancelled} scheduled message${cancelled !== 1 ? "s" : ""} cancelled.`);
+            setMessage({
+                type: "success",
+                text: `⏸️ Campaign paused. ${cancelled} scheduled message${cancelled !== 1 ? "s" : ""} cancelled.`,
+            });
         }
         setUpdating(false);
         router.refresh();
@@ -63,6 +87,20 @@ export function CampaignControls({ campaign, prospectCount: initialCount, stepCo
 
     return (
         <>
+            {/* Status message banner */}
+            {message && (
+                <div
+                    className={`campaign-message ${message.type === "error" ? "campaign-message-error" : "campaign-message-success"}`}
+                    onClick={clearMessage}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === "Enter") clearMessage(); }}
+                >
+                    {message.text}
+                    <span className="campaign-message-dismiss">✕</span>
+                </div>
+            )}
+
             <div className="campaign-controls">
                 {/* Prospect count + Add button */}
                 <div className="campaign-controls-left">
@@ -96,7 +134,7 @@ export function CampaignControls({ campaign, prospectCount: initialCount, stepCo
                                     : "Launch this campaign"
                             }
                         >
-                            {updating ? "Updating…" : "🚀 Start Campaign"}
+                            {updating ? "Starting…" : "🚀 Start Campaign"}
                         </button>
                     )}
 
@@ -106,7 +144,7 @@ export function CampaignControls({ campaign, prospectCount: initialCount, stepCo
                             onClick={() => handlePauseCampaign()}
                             disabled={updating}
                         >
-                            {updating ? "Updating…" : "⏸️ Pause"}
+                            {updating ? "Pausing…" : "⏸️ Pause"}
                         </button>
                     )}
 
@@ -116,7 +154,7 @@ export function CampaignControls({ campaign, prospectCount: initialCount, stepCo
                             onClick={() => handleStatusChange("ACTIVE")}
                             disabled={updating}
                         >
-                            {updating ? "Updating…" : "▶️ Resume"}
+                            {updating ? "Resuming…" : "▶️ Resume"}
                         </button>
                     )}
 
@@ -126,7 +164,7 @@ export function CampaignControls({ campaign, prospectCount: initialCount, stepCo
                             onClick={() => handleStatusChange("COMPLETED")}
                             disabled={updating}
                         >
-                            {updating ? "Updating…" : "✅ Complete"}
+                            {updating ? "Completing…" : "✅ Complete"}
                         </button>
                     )}
                 </div>

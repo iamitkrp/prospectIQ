@@ -35,14 +35,17 @@ export function ProspectPipeline({ entries, totalSteps, campaignId }: ProspectPi
     const router = useRouter();
     const [repliedIds, setRepliedIds] = useState<Set<string>>(new Set());
     const [loadingId, setLoadingId] = useState<string | null>(null);
+    const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
 
     async function handleMarkReplied(prospectId: string) {
         setLoadingId(prospectId);
+        setMessage(null);
         const { error } = await markAsReplied(campaignId, prospectId);
         if (error) {
-            alert(`Failed: ${error}`);
+            setMessage({ type: "error", text: `Failed to mark as replied: ${error}` });
         } else {
             setRepliedIds((prev) => new Set(prev).add(prospectId));
+            setMessage({ type: "success", text: "Marked as replied — their sequence is now stopped." });
         }
         setLoadingId(null);
         router.refresh();
@@ -62,6 +65,20 @@ export function ProspectPipeline({ entries, totalSteps, campaignId }: ProspectPi
     return (
         <div className="pipeline-section">
             <h3 className="section-label">🎯 Prospect Pipeline</h3>
+
+            {message && (
+                <div
+                    className={`campaign-message ${message.type === "error" ? "campaign-message-error" : "campaign-message-success"}`}
+                    onClick={() => setMessage(null)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === "Enter") setMessage(null); }}
+                >
+                    {message.text}
+                    <span className="campaign-message-dismiss">✕</span>
+                </div>
+            )}
+
             <div className="pipeline-table-wrap">
                 <table className="prospects-table">
                     <thead>
@@ -71,7 +88,7 @@ export function ProspectPipeline({ entries, totalSteps, campaignId }: ProspectPi
                             <th>Progress</th>
                             <th>Status</th>
                             <th>Last Activity</th>
-                            <th></th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -107,7 +124,7 @@ export function ProspectPipeline({ entries, totalSteps, campaignId }: ProspectPi
                                     <td className="pipeline-time">
                                         {formatTime(e.last_sent_at)}
                                     </td>
-                                    <td>
+                                    <td style={{ textAlign: "right" }}>
                                         {!isReplied && (
                                             <button
                                                 className="btn-ghost btn-xs"
@@ -128,3 +145,4 @@ export function ProspectPipeline({ entries, totalSteps, campaignId }: ProspectPi
         </div>
     );
 }
+

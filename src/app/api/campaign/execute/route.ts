@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Receiver } from "@upstash/qstash";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/brevo";
 import { getGroqClient, GROQ_MODEL } from "@/lib/groq";
 import {
@@ -64,7 +64,7 @@ async function verifyRequest(request: NextRequest, rawBody: string): Promise<Nex
     // Path 1: Internal server-side call with shared secret
     const internalSecret = process.env.CAMPAIGN_INTERNAL_SECRET;
     const authHeader = request.headers.get("x-campaign-secret");
-    if (internalSecret && authHeader === internalSecret) {
+    if (internalSecret && authHeader && internalSecret === authHeader) {
         return null; // ✅ Verified via internal secret
     }
 
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
         console.log(`[execute] Campaign=${campaignId} Prospect=${prospectId} Step=${stepOrder}`);
 
         /* ── Supabase client (service-level, no user auth needed) ── */
-        const supabase = await createClient();
+        const supabase = await createAdminClient();
 
         /* ── 1. Check campaign is ACTIVE ── */
         const { data: campaign } = await supabase
@@ -288,6 +288,8 @@ export async function POST(request: NextRequest) {
             step_id: step.id,
             status: sendResult.success ? "SENT" : "FAILED",
             sent_at: sendResult.success ? new Date().toISOString() : null,
+            subject,
+            body: emailBody,
             qstash_message_id: null as string | null, // filled below if next step scheduled
         };
 

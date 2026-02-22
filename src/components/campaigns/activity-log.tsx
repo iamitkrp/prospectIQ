@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { ActivityEntry } from "@/app/campaigns/actions";
 
 interface ActivityLogProps {
@@ -33,6 +34,57 @@ function formatTime(iso: string | null): string {
     });
 }
 
+function ActivityRow({ entry }: { entry: ActivityEntry }) {
+    const [expanded, setExpanded] = useState(false);
+    const hasEmail = entry.subject || entry.body;
+
+    return (
+        <div className="activity-row-wrapper">
+            <div
+                className={`activity-row ${hasEmail ? "activity-row-clickable" : ""}`}
+                onClick={() => hasEmail && setExpanded(!expanded)}
+                role={hasEmail ? "button" : undefined}
+                tabIndex={hasEmail ? 0 : undefined}
+                onKeyDown={(e) => {
+                    if (hasEmail && (e.key === "Enter" || e.key === " ")) {
+                        e.preventDefault();
+                        setExpanded(!expanded);
+                    }
+                }}
+            >
+                <span className="activity-time">{formatTime(entry.sent_at)}</span>
+                <span className={`activity-status ${STATUS_CLASS[entry.status] ?? ""}`}>
+                    {STATUS_ICON[entry.status] ?? "•"} {entry.status}
+                </span>
+                <span className="activity-step">Step {entry.step_order}</span>
+                <span className="activity-prospect" title={entry.prospect_email}>
+                    {entry.prospect_name}
+                </span>
+                {hasEmail && (
+                    <span className="activity-expand-hint">
+                        {expanded ? "▾" : "▸"} {expanded ? "Hide" : "View"} email
+                    </span>
+                )}
+            </div>
+
+            {expanded && hasEmail && (
+                <div className="activity-email-preview">
+                    {entry.subject && (
+                        <div className="email-preview-subject">
+                            <strong>Subject:</strong> {entry.subject}
+                        </div>
+                    )}
+                    {entry.body && (
+                        <div className="email-preview-body">
+                            {entry.body}
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
 export function ActivityLog({ entries }: ActivityLogProps) {
     if (entries.length === 0) {
         return (
@@ -50,16 +102,7 @@ export function ActivityLog({ entries }: ActivityLogProps) {
             <h3 className="section-label">📡 Activity Log</h3>
             <div className="activity-terminal">
                 {entries.map((e) => (
-                    <div key={e.id} className="activity-row">
-                        <span className="activity-time">{formatTime(e.sent_at)}</span>
-                        <span className={`activity-status ${STATUS_CLASS[e.status] ?? ""}`}>
-                            {STATUS_ICON[e.status] ?? "•"} {e.status}
-                        </span>
-                        <span className="activity-step">Step {e.step_order}</span>
-                        <span className="activity-prospect" title={e.prospect_email}>
-                            {e.prospect_name}
-                        </span>
-                    </div>
+                    <ActivityRow key={e.id} entry={e} />
                 ))}
             </div>
         </div>
