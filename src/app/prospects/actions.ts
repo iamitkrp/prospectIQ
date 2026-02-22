@@ -184,3 +184,34 @@ export async function deleteProspect(id: string) {
     revalidatePath("/prospects");
     return { success: "Prospect deleted." };
 }
+
+/**
+ * Delete multiple prospects by IDs.
+ */
+export async function bulkDeleteProspects(ids: string[]) {
+    const supabase = await createClient();
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { error: "Not authenticated" };
+    }
+
+    if (ids.length === 0) {
+        return { error: "No prospects selected." };
+    }
+
+    const { error } = await supabase
+        .from("prospects")
+        .delete()
+        .in("id", ids)
+        .eq("user_id", user.id);
+
+    if (error) {
+        return { error: error.message };
+    }
+
+    revalidatePath("/prospects");
+    return { success: `${ids.length} prospect${ids.length !== 1 ? "s" : ""} deleted.` };
+}

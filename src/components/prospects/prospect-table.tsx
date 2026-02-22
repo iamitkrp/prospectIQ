@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createProspect, updateProspect, deleteProspect } from "@/app/prospects/actions";
+import { createProspect, updateProspect, deleteProspect, bulkDeleteProspects } from "@/app/prospects/actions";
 import { AddToCampaignModal } from "@/components/prospects/add-to-campaign-modal";
 import type { Prospect } from "@/types";
 import type { EnrichmentResult } from "@/lib/enrichment";
@@ -96,6 +96,23 @@ export function ProspectTable({ prospects, currentPage, totalPages, totalCount, 
         } else {
             setSuccess(result.success ?? "Deleted!");
             setDeletingId(null);
+            router.refresh();
+        }
+    }
+
+    async function handleBulkDelete() {
+        if (selectedIds.size === 0) return;
+        const count = selectedIds.size;
+        if (!confirm(`Delete ${count} prospect${count !== 1 ? "s" : ""}? This cannot be undone.`)) return;
+        clearMessages();
+        setLoading(true);
+        const result = await bulkDeleteProspects(Array.from(selectedIds));
+        setLoading(false);
+        if (result.error) {
+            setError(result.error);
+        } else {
+            setSuccess(result.success ?? "Deleted!");
+            setSelectedIds(new Set());
             router.refresh();
         }
     }
@@ -249,6 +266,13 @@ export function ProspectTable({ prospects, currentPage, totalPages, totalCount, 
                             onClick={() => setShowCampaignModal(true)}
                         >
                             Add to Campaign
+                        </button>
+                        <button
+                            className="btn-danger btn-sm"
+                            onClick={handleBulkDelete}
+                            disabled={loading}
+                        >
+                            {loading ? "Deleting…" : "Delete"}
                         </button>
                         <button
                             className="btn-secondary btn-sm"
