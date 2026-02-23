@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { qstash } from "@/lib/qstash";
+import { executeCampaignStep } from "@/lib/campaign-engine";
 import type { Campaign, CampaignStep, Prospect } from "@/types/database";
 
 /**
@@ -469,38 +470,27 @@ export async function startCampaign(
         return { error: cpErr?.message ?? "No prospects assigned", triggered: 0 };
     }
 
-    // 4. Call the execute endpoint for each prospect (Step 1)
-    const appUrl =
-        process.env.NEXT_PUBLIC_APP_URL ??
-        (process.env.VERCEL_URL
-            ? `https://${process.env.VERCEL_URL}`
-            : "http://localhost:3000");
-
-    const internalSecret = process.env.CAMPAIGN_INTERNAL_SECRET ?? "";
-
+    // 4. Call the execute engine directly for each prospect (Step 1)
     let triggered = 0;
 
-    // Fire all Step 1 calls concurrently
+    console.log(`[startCampaign] Executing Step 1 for ${cpRows.length} prospects...`);
     const results = await Promise.allSettled(
-        cpRows.map((row) =>
-            fetch(`${appUrl}/api/campaign/execute`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "x-campaign-secret": internalSecret,
-                },
-                body: JSON.stringify({
-                    campaignId,
-                    prospectId: row.prospect_id,
-                    stepOrder: 1,
-                }),
-            })
-        )
+        cpRows.map((row) => executeCampaignStep(campaignId, row.prospect_id, 1))
     );
 
-    for (const r of results) {
-        if (r.status === "fulfilled" && r.value.ok) {
-            triggered++;
+    for (const [index, r] of results.entries()) {
+        const prospectId = cpRows[index].prospect_id;
+        if (r.status === "fulfilled") {
+            const result = r.value;
+            if (result.error) {
+                console.error(`[startCampaign] Execution error for ${prospectId}:`, result.error);
+            } else if (result.skipped) {
+                console.log(`[startCampaign] Execution skipped for ${prospectId}:`, result.reason);
+            } else {
+                triggered++;
+            }
+        } else {
+            console.error(`[startCampaign] Unhandled promise rejection for ${prospectId}:`, r.reason);
         }
     }
 
