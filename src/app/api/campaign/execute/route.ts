@@ -133,64 +133,7 @@ export async function POST(request: NextRequest) {
         /* ── Supabase client (service-level, no user auth needed) ── */
         const supabase = await createAdminClient();
 
-        /* ── 1. Check campaign is ACTIVE ── */
-        const { data: campaign } = await supabase
-            .from("campaigns")
-            .select("id, status, user_id")
-            .eq("id", campaignId)
-            .single();
-
-        if (!campaign || campaign.status !== "ACTIVE") {
-            console.log(`[execute] Campaign not active (status=${campaign?.status}). Skipping.`);
-            return NextResponse.json({ skipped: true, reason: "CAMPAIGN_NOT_ACTIVE" });
-        }
-
-        /* ── 2. Reply-check guard ── */
-        const { data: repliedLog } = await supabase
-            .from("email_logs")
-            .select("id")
-            .eq("campaign_id", campaignId)
-            .eq("prospect_id", prospectId)
-            .eq("status", "REPLIED")
-            .limit(1)
-            .maybeSingle();
-
-        if (repliedLog) {
-            console.log(`[execute] Prospect ${prospectId} already replied. Skipping.`);
-            return NextResponse.json({ skipped: true, reason: "ALREADY_REPLIED" });
-        }
-
-        /* ── 2b. 24-hour guard (3.3.5) ── */
-        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-        const { data: recentSend } = await supabase
-            .from("email_logs")
-            .select("id")
-            .eq("prospect_id", prospectId)
-            .eq("status", "SENT")
-            .gte("sent_at", twentyFourHoursAgo)
-            .limit(1)
-            .maybeSingle();
-
-        if (recentSend) {
-            console.log(`[execute] Prospect ${prospectId} already emailed within 24h. Skipping.`);
-            return NextResponse.json({ skipped: true, reason: "RATE_LIMITED_24H" });
-        }
-
-        /* ── 2c. Daily send limit guard (3.3.6) ── */
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const { count: todaySent } = await supabase
-            .from("email_logs")
-            .select("id", { count: "exact", head: true })
-            .eq("status", "SENT")
-            .gte("sent_at", todayStart.toISOString());
-
-        if ((todaySent ?? 0) >= DAILY_SEND_LIMIT) {
-            console.log(`[execute] Daily send limit (${DAILY_SEND_LIMIT}) reached. Skipping.`);
-            return NextResponse.json({ skipped: true, reason: "DAILY_LIMIT_REACHED" });
-        }
-
-        /* ── 3. Fetch campaign step ── */
+        /* ── 1. Fetch campaign step FIRST so we can log skips ── */
         const { data: step, error: stepErr } = await supabase
             .from("campaign_steps")
             .select("id, step_order, delay_days, prompt_template")
@@ -203,6 +146,82 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ skipped: true, reason: "NO_STEP" });
         }
 
+        const logSkip = async (reason: string) => {
+            await supabase.from("email_logs").insert({
+                prospect_id: prospectId,
+                campaign_id: campaignId,
+                step_id: step.id,
+                status: "FAILED",
+                sent_at: new Date().toISOString(),
+                subject: `Skipped: ${reason}`,
+                body: `Execution skipped silently. Reason: ${reason}`,
+                qstash_message_id: null
+            });
+        };
+
+        /* ── 2. Check campaign is ACTIVE ── */
+        const { data: campaign } = await supabase
+            .from("campaigns")
+            .select("id, status, user_id")
+            .eq("id", campaignId)
+            .single();
+
+        if (!campaign || campaign.status !== "ACTIVE") {
+            console.log(`[execute] Campaign not active (status=${campaign?.status}). Skipping.`);
+            await logSkip(`CAMPAIGN_NOT_ACTIVE (status=${campaign?.status})`);
+            // Return 400 so startCampaign knows it actually failed
+            return NextResponse.json({ error: "CAMPAIGN_NOT_ACTIVE" }, { status: 400 });
+        }
+
+        /* ── 3. Reply-check guard ── */
+        const { data: repliedLog } = await supabase
+            .from("email_logs")
+            .select("id")
+            .eq("campaign_id", campaignId)
+            .eq("prospect_id", prospectId)
+            .eq("status", "REPLIED")
+            .limit(1)
+            .maybeSingle();
+
+        if (repliedLog) {
+            console.log(`[execute] Prospect ${prospectId} already replied. Skipping.`);
+            await logSkip("ALREADY_REPLIED");
+            return NextResponse.json({ skipped: true, reason: "ALREADY_REPLIED" });
+        }
+
+        /* ── 3b. 24-hour guard (3.3.5) ── */
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { data: recentSend } = await supabase
+            .from("email_logs")
+            .select("id")
+            .eq("campaign_id", campaignId) // Scope to this campaign so concurrent testing works
+            .eq("prospect_id", prospectId)
+            .eq("status", "SENT")
+            .gte("sent_at", twentyFourHoursAgo)
+            .limit(1)
+            .maybeSingle();
+
+        if (recentSend) {
+            console.log(`[execute] Prospect ${prospectId} already emailed within 24h testing scope. Skipping.`);
+            await logSkip("RATE_LIMITED_24H");
+            return NextResponse.json({ skipped: true, reason: "RATE_LIMITED_24H" });
+        }
+
+        /* ── 3c. Daily send limit guard (3.3.6) ── */
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const { count: todaySent } = await supabase
+            .from("email_logs")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "SENT")
+            .gte("sent_at", todayStart.toISOString());
+
+        if ((todaySent ?? 0) >= DAILY_SEND_LIMIT) {
+            console.log(`[execute] Daily send limit (${DAILY_SEND_LIMIT}) reached. Skipping.`);
+            await logSkip("DAILY_LIMIT_REACHED");
+            return NextResponse.json({ skipped: true, reason: "DAILY_LIMIT_REACHED" });
+        }
+
         /* ── 4. Fetch prospect details ── */
         const { data: prospect, error: prospectErr } = await supabase
             .from("prospects")
@@ -212,6 +231,7 @@ export async function POST(request: NextRequest) {
 
         if (prospectErr || !prospect || !prospect.email) {
             console.log(`[execute] Prospect ${prospectId} not found or no email. Skipping.`);
+            await logSkip("PROSPECT_INVALID");
             return NextResponse.json({ skipped: true, reason: "PROSPECT_INVALID" });
         }
 
