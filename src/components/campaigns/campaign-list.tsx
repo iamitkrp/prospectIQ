@@ -143,14 +143,12 @@ export function CampaignList({ campaigns: initial }: CampaignListProps) {
                                     <Link href={`/campaigns/${campaign.id}`} className="btn-secondary btn-sm">
                                         Open
                                     </Link>
-                                    {campaign.status === "DRAFT" && (
-                                        <button
-                                            className="btn-danger btn-sm"
-                                            onClick={() => setDeletingId(campaign.id)}
-                                        >
-                                            Delete
-                                        </button>
-                                    )}
+                                    <button
+                                        className="btn-danger btn-sm"
+                                        onClick={() => setDeletingId(campaign.id)}
+                                    >
+                                        Delete
+                                    </button>
                                 </div>
 
                                 {/* Delete confirm */}

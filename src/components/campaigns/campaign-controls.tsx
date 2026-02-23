@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Campaign } from "@/types/database";
-import { updateCampaignStatus, startCampaign, pauseCampaign } from "@/app/campaigns/actions";
+import { updateCampaignStatus, startCampaign, pauseCampaign, deleteCampaign } from "@/app/campaigns/actions";
 import { AddProspectsModal } from "./add-prospects-modal";
 
 interface CampaignControlsProps {
@@ -77,6 +77,22 @@ export function CampaignControls({ campaign, prospectCount: initialCount, stepCo
         }
         setUpdating(false);
         router.refresh();
+    }
+
+    async function handleDeleteCampaign() {
+        if (!window.confirm(`Are you sure you want to delete "${campaign.name}"? All prospects, steps, and activity will be lost.`)) {
+            return;
+        }
+        clearMessage();
+        setUpdating(true);
+        const { error } = await deleteCampaign(campaign.id);
+        if (error) {
+            setMessage({ type: "error", text: `Failed to delete campaign: ${error}` });
+            setUpdating(false);
+        } else {
+            // Redirect back to campaigns list since this one is gone
+            router.push("/campaigns");
+        }
     }
 
     const canActivate = status === "DRAFT" && stepCount > 0 && pCount > 0;
@@ -167,6 +183,15 @@ export function CampaignControls({ campaign, prospectCount: initialCount, stepCo
                             {updating ? "Completing…" : "✅ Complete"}
                         </button>
                     )}
+
+                    <button
+                        className="btn-danger btn-sm"
+                        onClick={handleDeleteCampaign}
+                        disabled={updating}
+                        title="Permanently delete this campaign"
+                    >
+                        🗑️ Delete
+                    </button>
                 </div>
             </div>
 
