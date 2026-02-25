@@ -32,3 +32,7 @@ create policy "Users can insert own settings"
 create policy "Users can update own settings"
   on user_settings for update
   using (auth.uid() = user_id);
+
+create policy "Users can delete own settings"
+  on user_settings for delete
+  using (auth.uid() = user_id);
