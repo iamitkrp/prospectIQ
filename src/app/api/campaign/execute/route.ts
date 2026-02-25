@@ -26,7 +26,7 @@ import { executeCampaignStep } from "@/lib/campaign-engine";
  *   2c. Daily limit guard — skip if daily send limit reached
  *   3. Fetch campaign, step, and prospect data
  *   4. Generate email via Groq using step's prompt_template
- *   5. Send via Brevo
+ *   5. Send via user's SMTP
  *   6. Log to email_logs (classify permanent vs transient errors)
  *   7. Schedule next step via QStash (if one exists)
  */
