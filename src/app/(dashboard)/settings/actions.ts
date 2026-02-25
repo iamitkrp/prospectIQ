@@ -16,8 +16,8 @@ function encrypt(text: string) {
     return iv.toString("hex") + ":" + encrypted.toString("hex");
 }
 
-// Helper: Decrypt
-export function decrypt(text: string) {
+// Helper: Decrypt (Internal only, not exported since it's in a 'use server' file and sync)
+function decrypt(text: string) {
     try {
         const normalizedKey = ENCRYPTION_KEY.padEnd(32, '0').substring(0, 32);
         const textParts = text.split(":");
