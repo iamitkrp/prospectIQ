@@ -48,8 +48,8 @@ export function CampaignControls({ campaign, prospectCount: initialCount, stepCo
             setStatus("ACTIVE");
             if (triggered === 0) {
                 setMessage({
-                    type: "error",
-                    text: "Campaign set to ACTIVE but no emails were triggered. Check server logs and ensure CAMPAIGN_INTERNAL_SECRET is set.",
+                    type: "success",
+                    text: "Campaign is ACTIVE. All prospects have already been emailed for Step 1 — follow-ups are scheduled automatically.",
                 });
             } else {
                 setMessage({

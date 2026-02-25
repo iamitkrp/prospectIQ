@@ -10,6 +10,8 @@ import {
 import { qstash } from "@/lib/qstash";
 
 const SECONDS_PER_DAY = 86_400;
+const TEST_MODE = process.env.CAMPAIGN_TEST_MODE === "true";
+const TEST_DELAY_SECONDS = 300; // 5 minutes
 const DAILY_SEND_LIMIT = parseInt(process.env.DAILY_SEND_LIMIT ?? "300", 10);
 
 /** Error codes that should NOT be retried by QStash */
@@ -340,7 +342,8 @@ export async function executeCampaignStep(
     let qstashMessageId: string | null = null;
 
     if (nextStep) {
-        const delaySeconds = (nextStep.delay_days ?? 1) * SECONDS_PER_DAY;
+        const delaySeconds = TEST_MODE ? TEST_DELAY_SECONDS : (nextStep.delay_days ?? 1) * SECONDS_PER_DAY;
+        console.log(`[executeCampaignStep] Scheduling next step ${nextStepOrder} with delay=${delaySeconds}s ${TEST_MODE ? '(TEST MODE)' : ''}`);
         const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
         const res = await qstash.publishJSON({
