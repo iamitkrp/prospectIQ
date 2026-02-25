@@ -44,9 +44,9 @@ export async function signUp(formData: FormData) {
         };
     }
 
-    // If email confirmation is disabled, user gets a session immediately
+    // Return redirect path — let the client navigate after cookies are set
     revalidatePath("/", "layout");
-    redirect("/dashboard");
+    return { redirect: "/dashboard" };
 }
 
 /**
@@ -72,7 +72,7 @@ export async function signIn(formData: FormData) {
     }
 
     revalidatePath("/", "layout");
-    redirect("/dashboard");
+    return { redirect: "/dashboard" };
 }
 
 /**
