@@ -121,21 +121,24 @@ export async function executeCampaignStep(
     }
 
     /* ── 3b. 24-hour guard ── */
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const { data: recentSend } = await supabase
-        .from("email_logs")
-        .select("id")
-        .eq("campaign_id", campaignId)
-        .eq("prospect_id", prospectId)
-        .eq("status", "SENT")
-        .gte("sent_at", twentyFourHoursAgo)
-        .limit(1)
-        .maybeSingle();
+    // Bypass 24-hour guard if we are in test mode and trying to test 5-minute delays
+    if (!TEST_MODE) {
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { data: recentSend } = await supabase
+            .from("email_logs")
+            .select("id")
+            .eq("campaign_id", campaignId)
+            .eq("prospect_id", prospectId)
+            .eq("status", "SENT")
+            .gte("sent_at", twentyFourHoursAgo)
+            .limit(1)
+            .maybeSingle();
 
-    if (recentSend) {
-        console.log(`[executeCampaignStep] Prospect ${prospectId} already emailed within 24h. Skipping.`);
-        await logSkip("RATE_LIMITED_24H");
-        return { executed: false, skipped: true, reason: "RATE_LIMITED_24H" };
+        if (recentSend) {
+            console.log(`[executeCampaignStep] Prospect ${prospectId} already emailed within 24h. Skipping.`);
+            await logSkip("RATE_LIMITED_24H");
+            return { executed: false, skipped: true, reason: "RATE_LIMITED_24H" };
+        }
     }
 
     /* ── 3c. Daily send limit guard ── */
