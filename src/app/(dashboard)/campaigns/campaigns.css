@@ -662,7 +662,7 @@
    =========================================== */
 
 .add-prospects-modal {
-    width: 720px;
+    width: 800px;
     max-width: 95vw;
     max-height: 80vh;
     display: flex;
@@ -679,6 +679,86 @@
     max-height: 400px;
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
+}
+
+.add-prospects-table-wrap .prospects-table {
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.add-prospects-table-wrap .prospects-table th,
+.add-prospects-table-wrap .prospects-table td {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8125rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-subtle);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.add-prospects-table-wrap .prospects-table th {
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.add-prospects-table-wrap .prospects-table tbody tr {
+    transition: background var(--transition-fast);
+}
+
+.add-prospects-table-wrap .prospects-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.add-prospects-table-wrap .prospects-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Column widths — checkbox, name, email, company, role */
+.add-prospects-table-wrap .prospects-table th:nth-child(1),
+.add-prospects-table-wrap .prospects-table td:nth-child(1) {
+    width: 40px;
+    text-align: center;
+    overflow: visible;
+}
+
+.add-prospects-table-wrap .prospects-table th:nth-child(2),
+.add-prospects-table-wrap .prospects-table td:nth-child(2) {
+    width: 20%;
+}
+
+.add-prospects-table-wrap .prospects-table th:nth-child(3),
+.add-prospects-table-wrap .prospects-table td:nth-child(3) {
+    width: 30%;
+}
+
+.add-prospects-table-wrap .prospects-table th:nth-child(4),
+.add-prospects-table-wrap .prospects-table td:nth-child(4) {
+    width: 25%;
+}
+
+.add-prospects-table-wrap .prospects-table th:nth-child(5),
+.add-prospects-table-wrap .prospects-table td:nth-child(5) {
+    width: 15%;
+}
+
+/* Name column styling */
+.add-prospects-table-wrap .cell-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Email column styling */
+.add-prospects-table-wrap .cell-email {
+    color: var(--brand-400);
 }
 
 .add-prospects-loading,
