@@ -1,4 +1,5 @@
-getCampaignWithSteps,
+import {
+    getCampaignWithSteps,
     getCampaignProspectCount,
     getCampaignActivity,
     getCampaignProspectPipeline,
