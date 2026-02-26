@@ -23,6 +23,7 @@ export interface Campaign {
     user_id: string;
     name: string;
     status: "DRAFT" | "ACTIVE" | "PAUSED" | "COMPLETED";
+    require_approval: boolean;
     created_at: string;
 }
 
@@ -46,7 +47,7 @@ export interface EmailLog {
     campaign_id: string;
     prospect_id: string;
     step_id: string;
-    status: "PENDING" | "QUEUED" | "SENT" | "FAILED" | "REPLIED";
+    status: "PENDING" | "QUEUED" | "SENT" | "FAILED" | "REPLIED" | "DRAFT" | "REJECTED";
     sent_at: string | null;
     qstash_message_id: string | null;
 }

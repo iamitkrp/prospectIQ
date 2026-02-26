@@ -37,7 +37,7 @@ export async function getCampaigns(): Promise<{
 /**
  * Create a new campaign (defaults to DRAFT status).
  */
-export async function createCampaign(name: string): Promise<{
+export async function createCampaign(name: string, requireApproval: boolean = false): Promise<{
     data: Campaign | null;
     error: string | null;
 }> {
@@ -53,7 +53,7 @@ export async function createCampaign(name: string): Promise<{
 
     const { data, error } = await supabase
         .from("campaigns")
-        .insert({ name, user_id: user.id, status: "DRAFT" })
+        .insert({ name, user_id: user.id, status: "DRAFT", require_approval: requireApproval })
         .select()
         .single();
 
@@ -781,3 +781,98 @@ export async function markAsReplied(
     return { error: null };
 }
 
+/* ================================================================
+   APPROVAL WORKFLOW
+   ================================================================ */
+
+export interface PendingApproval {
+    id: string;
+    campaign_id: string;
+    prospect_id: string;
+    step_id: string;
+    subject: string;
+    body: string;
+    created_at: string;
+    prospect: {
+        first_name: string | null;
+        last_name: string | null;
+        email: string;
+    };
+    step: {
+        step_order: number;
+    };
+}
+
+/**
+ * Fetch all drafted emails awaiting manual approval for a campaign.
+ */
+export async function getPendingApprovals(campaignId: string): Promise<{ data: PendingApproval[]; error: string | null }> {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+        return { data: [], error: "Not authenticated" };
+    }
+
+    const { data, error } = await supabase
+        .from("email_logs")
+        .select(`
+            id, campaign_id, prospect_id, step_id, subject, body, created_at,
+            prospect:prospects!inner(first_name, last_name, email),
+            step:campaign_steps!inner(step_order)
+        `)
+        .eq("campaign_id", campaignId)
+        .eq("status", "DRAFT")
+        .order("created_at", { ascending: true });
+
+    if (error) {
+        return { data: [], error: error.message };
+    }
+
+    return { data: data as any as PendingApproval[], error: null };
+}
+
+/**
+ * Reject a drafted email, preventing it from sending and stopping the sequence for this prospect.
+ */
+export async function rejectEmailTask(logId: string): Promise<{ error: string | null }> {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+        return { error: "Not authenticated" };
+    }
+
+    const { error } = await supabase
+        .from("email_logs")
+        .update({ status: "REJECTED" })
+        .eq("id", logId);
+
+    if (error) {
+        return { error: error.message };
+    }
+
+    return { error: null };
+}
+
+/**
+ * Approve and send a drafted email. 
+ * This calls `approveAndSendEmail` from campaign-engine, which emails the prospect and schedules the next step.
+ */
+export async function approveEmailTask(logId: string, subject: string, body: string): Promise<{ error: string | null }> {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+        return { error: "Not authenticated" };
+    }
+
+    try {
+        // We will implement approveAndSendEmail in campaign-engine.ts
+        const { approveAndSendEmail } = await import("@/lib/campaign-engine");
+        await approveAndSendEmail(logId, subject, body);
+        return { error: null };
+    } catch (err: any) {
+        return { error: err.message || "Failed to approve and send email" };
+    }
+}

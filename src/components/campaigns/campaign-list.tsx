@@ -29,6 +29,7 @@ export function CampaignList({ campaigns: initial }: CampaignListProps) {
     const [campaigns, setCampaigns] = useState(initial);
     const [showCreate, setShowCreate] = useState(false);
     const [newName, setNewName] = useState("");
+    const [requireApproval, setRequireApproval] = useState(false);
     const [creating, setCreating] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -40,7 +41,7 @@ export function CampaignList({ campaigns: initial }: CampaignListProps) {
         setCreating(true);
         setError(null);
 
-        const { data, error: err } = await createCampaign(newName.trim());
+        const { data, error: err } = await createCampaign(newName.trim(), requireApproval);
         if (err) {
             setError(err);
             setCreating(false);
@@ -50,6 +51,7 @@ export function CampaignList({ campaigns: initial }: CampaignListProps) {
             setCampaigns([data, ...campaigns]);
         }
         setNewName("");
+        setRequireApproval(false);
         setShowCreate(false);
         setCreating(false);
         router.refresh();
@@ -97,6 +99,14 @@ export function CampaignList({ campaigns: initial }: CampaignListProps) {
                         onChange={(e) => setNewName(e.target.value)}
                         autoFocus
                     />
+                    <label className="campaign-create-checkbox">
+                        <input
+                            type="checkbox"
+                            checked={requireApproval}
+                            onChange={(e) => setRequireApproval(e.target.checked)}
+                        />
+                        Require manual approval before emails are sent
+                    </label>
                     <button
                         type="submit"
                         className="btn-primary"

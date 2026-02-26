@@ -1,13 +1,14 @@
-import {
-    getCampaignWithSteps,
+getCampaignWithSteps,
     getCampaignProspectCount,
     getCampaignActivity,
     getCampaignProspectPipeline,
+    getPendingApprovals,
 } from "@/app/campaigns/actions";
 import { StepBuilder } from "@/components/campaigns/step-builder";
 import { CampaignControls } from "@/components/campaigns/campaign-controls";
 import { ActivityLog } from "@/components/campaigns/activity-log";
 import { ProspectPipeline } from "@/components/campaigns/prospect-pipeline";
+import { PendingApprovals } from "@/components/campaigns/pending-approvals";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import "../campaigns.css";
@@ -53,11 +54,12 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
 
     // Fetch monitoring data for non-DRAFT campaigns
     const isDraft = campaign.status === "DRAFT";
-    const [activity, pipeline] = isDraft
-        ? [[], []]
+    const [activity, pipeline, { data: pendingApprovals }] = isDraft
+        ? [[], [], { data: [] }]
         : await Promise.all([
             getCampaignActivity(id),
             getCampaignProspectPipeline(id, steps.length),
+            getPendingApprovals(id),
         ]);
 
     return (
@@ -93,6 +95,7 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
             {!isDraft && (
                 <>
                     <ProspectPipeline entries={pipeline} totalSteps={steps.length} campaignId={id} />
+                    <PendingApprovals initialApprovals={pendingApprovals || []} />
                     <ActivityLog entries={activity} />
                 </>
             )}

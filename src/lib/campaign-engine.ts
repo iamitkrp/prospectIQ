@@ -94,7 +94,7 @@ export async function executeCampaignStep(
     /* ── 2. Check campaign is ACTIVE ── */
     const { data: campaign } = await supabase
         .from("campaigns")
-        .select("id, status, user_id")
+        .select("id, status, user_id, require_approval")
         .eq("id", campaignId)
         .single();
 
@@ -236,6 +236,31 @@ export async function executeCampaignStep(
         throw new Error("AI returned unparseable response.");
     }
 
+    /* ── 5.5 Optional Approval Halt ── */
+    if (campaign.require_approval) {
+        const logEntry = {
+            prospect_id: prospectId,
+            campaign_id: campaignId,
+            step_id: step.id,
+            status: "DRAFT",
+            sent_at: null,
+            subject,
+            body: emailBody,
+            qstash_message_id: null,
+        };
+        const { error: logError } = await supabase.from("email_logs").insert(logEntry);
+        if (logError) console.error("[executeCampaignStep] Failed to write draft:", logError);
+        console.log(`[executeCampaignStep] Step ${stepOrder} drafted for ${prospect.email} (Approval Required)`);
+
+        return {
+            executed: true,
+            sent: false,
+            stepOrder,
+            nextScheduled: false,
+            qstashMessageId: null,
+        };
+    }
+
     /* ── 6. Send via User's SMTP ── */
     const recipientName = [prospect.first_name, prospect.last_name].filter(Boolean).join(" ") || undefined;
 
@@ -372,4 +397,113 @@ export async function executeCampaignStep(
         nextScheduled: !!nextStep,
         qstashMessageId,
     };
+}
+
+/**
+ * Send a previously drafted email and schedule the next step.
+ */
+export async function approveAndSendEmail(logId: string, subject: string, body: string): Promise<void> {
+    const supabase = await createAdminClient();
+
+    // Fetch log
+    const { data: log, error: logErr } = await supabase
+        .from("email_logs")
+        .select(`
+            prospect_id, campaign_id, step_id,
+            prospects!inner(email, first_name, last_name)
+        `)
+        .eq("id", logId)
+        .single();
+
+    if (logErr || !log) throw new Error("Draft not found");
+    const prospectEmail = (log.prospects as any).email;
+
+    // Fetch campaign user_id
+    const { data: campaign } = await supabase
+        .from("campaigns")
+        .select("user_id")
+        .eq("id", log.campaign_id)
+        .single();
+
+    if (!campaign) throw new Error("Campaign not found");
+
+    // Fetch user settings
+    const { data: userSettings } = await supabase
+        .from("user_settings")
+        .select("smtp_email, smtp_app_password, is_smtp_verified")
+        .eq("user_id", campaign.user_id)
+        .single();
+
+    if (!userSettings || !userSettings.is_smtp_verified || !userSettings.smtp_app_password) {
+        throw new Error("SMTP is disconnected");
+    }
+
+    const decryptedPassword = decrypt(userSettings.smtp_app_password);
+    if (!decryptedPassword) throw new Error("Failed to decrypt SMTP password");
+
+    // Send email
+    const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: userSettings.smtp_email,
+            pass: decryptedPassword
+        }
+    });
+
+    const fromString = `"${process.env.APP_NAME || 'ProspectIQ'}" <${userSettings.smtp_email}>`;
+
+    await transporter.sendMail({
+        from: fromString,
+        to: prospectEmail,
+        subject: subject,
+        text: body,
+        html: body.replace(/\n/g, '<br/>'),
+    });
+
+    // Update log
+    const { error: updateErr } = await supabase
+        .from("email_logs")
+        .update({
+            status: "SENT",
+            sent_at: new Date().toISOString(),
+            subject,
+            body
+        })
+        .eq("id", logId);
+
+    if (updateErr) throw new Error("Failed to update log status");
+    console.log(`[approveAndSendEmail] Sent approved draft to ${prospectEmail}`);
+
+    // Schedule next step
+    const { data: currStep } = await supabase
+        .from("campaign_steps")
+        .select("step_order")
+        .eq("id", log.step_id)
+        .single();
+
+    if (currStep) {
+        const nextStepOrder = currStep.step_order + 1;
+        const { data: nextStep } = await supabase
+            .from("campaign_steps")
+            .select("id, delay_days")
+            .eq("campaign_id", log.campaign_id)
+            .eq("step_order", nextStepOrder)
+            .maybeSingle();
+
+        if (nextStep) {
+            const delaySeconds = TEST_MODE ? TEST_DELAY_SECONDS : (nextStep.delay_days ?? 1) * 86400;
+            const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+
+            const res = await qstash.publishJSON({
+                url: `${appUrl}/api/campaign/execute`,
+                body: { campaignId: log.campaign_id, prospectId: log.prospect_id, stepOrder: nextStepOrder },
+                delay: delaySeconds,
+            });
+
+            await supabase
+                .from("email_logs")
+                .update({ qstash_message_id: res.messageId })
+                .eq("id", logId);
+        }
+    }
 }
