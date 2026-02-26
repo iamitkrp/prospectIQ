@@ -792,7 +792,6 @@ export interface PendingApproval {
     step_id: string;
     subject: string;
     body: string;
-    created_at: string;
     prospect: {
         first_name: string | null;
         last_name: string | null;
@@ -817,13 +816,13 @@ export async function getPendingApprovals(campaignId: string): Promise<{ data: P
     const { data, error } = await supabase
         .from("email_logs")
         .select(`
-            id, campaign_id, prospect_id, step_id, subject, body, created_at,
+            id, campaign_id, prospect_id, step_id, subject, body,
             prospect:prospects!inner(first_name, last_name, email),
             step:campaign_steps!inner(step_order)
         `)
         .eq("campaign_id", campaignId)
         .eq("status", "DRAFT")
-        .order("created_at", { ascending: true });
+        .order("id", { ascending: true });
 
     if (error) {
         return { data: [], error: error.message };

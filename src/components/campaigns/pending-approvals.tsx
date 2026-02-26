@@ -88,7 +88,7 @@ export function PendingApprovals({ initialApprovals }: PendingApprovalsProps) {
                                 {draft.prospect.first_name} {draft.prospect.last_name} <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>({draft.prospect.email})</span>
                             </div>
                             <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                                Step {draft.step.step_order} • Drafted {new Date(draft.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                Step {draft.step.step_order}
                             </div>
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
