@@ -51,7 +51,7 @@ export function LandingPage() {
                     ProspectIQ 2.0 is now live
                 </div>
 
-                <h1 className="text-5xl md:text-7xl font-semibold tracking-tighter mb-6 max-w-4xl text-balance bg-clip-text text-transparent bg-gradient-to-b from-[#ffffff] to-[#a1a1aa]">
+                <h1 className="text-4xl sm:text-5xl md:text-7xl font-semibold tracking-tighter mb-6 max-w-4xl text-balance bg-clip-text text-transparent bg-gradient-to-b from-[#ffffff] to-[#a1a1aa] leading-[1.1]">
                     Zero-Cost Outreach,<br /> Infinite Scale.
                 </h1>
 
@@ -132,9 +132,9 @@ export function LandingPage() {
                                     <div className="text-[10px] text-[#10b981]">+4.1% this week</div>
                                     <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-[#10b981]/10 rounded-full blur-xl" />
                                 </div>
-                                <div className="hidden md:flex p-4 rounded-xl bg-[#0a0a0a] border border-[#ffffff0a] flex-col gap-2 relative overflow-hidden">
+                                <div className="p-4 rounded-xl bg-[#0a0a0a] border border-[#ffffff0a] flex flex-col gap-2 relative overflow-hidden">
                                     <div className="text-[10px] font-medium text-[#71717a] uppercase tracking-wider">Reply Rate</div>
-                                    <div className="text-2xl font-semibold text-[#ededed]">8.4%</div>
+                                    <div className="text-xl sm:text-2xl font-semibold text-[#ededed]">8.4%</div>
                                     <div className="text-[10px] text-[#71717a]">— Stable</div>
                                     <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-[#3b82f6]/10 rounded-full blur-xl" />
                                 </div>
