@@ -13,7 +13,7 @@ export function BrevoQuotaWidget({ quota }: BrevoQuotaWidgetProps) {
 
     return (
         <div className="quota-card">
-            <h3 className="chart-title">Brevo Email Quota</h3>
+            <h3 className="chart-title">Email Sending Quota</h3>
 
             <div className="quota-row">
                 <div className="quota-header">

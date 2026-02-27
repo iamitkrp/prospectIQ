@@ -78,7 +78,7 @@ const steps = [
     },
     {
         number: "04",
-        title: "Send Emails via Brevo",
+        title: "Send Emails via Gmail SMTP",
         icon: (
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 2L11 13" />
@@ -86,15 +86,15 @@ const steps = [
             </svg>
         ),
         color: "green",
-        what: "Brevo is the email delivery service that actually sends your emails. ProspectIQ connects to Brevo's free tier (300 emails/day) to deliver messages directly to your prospects' inboxes.",
-        why: "You can't send bulk emails from your personal Gmail — they'd get flagged as spam. Brevo handles deliverability, tracking, and compliance so your emails actually arrive.",
+        what: "ProspectIQ connects directly to your Google Workspace or Gmail account via App Passwords. This allows the platform to send real emails directly from your own inbox.",
+        why: "Sending from your own Gmail ensures high authenticity and deliverability, avoiding typical bulk-email spam flags because the emails originate from a trusted Google server.",
         how: [
             "After generating an AI draft, click **\"Send Email\"**",
-            "ProspectIQ sends it through Brevo's API",
+            "ProspectIQ sends it securely through your connected Gmail SMTP",
             "Every sent email is logged with timestamp and status",
-            "Track your daily send count on the Dashboard (0 / 300)",
+            "Track your daily send count on the Dashboard",
         ],
-        tip: "Brevo's free tier gives you 300 emails/day — that's plenty for targeted outreach. Quality over quantity.",
+        tip: "Google strictly limits daily sending (often 300 to 500 max). Start slow to protect your domain reputation.",
         status: "Coming in Phase 2",
     },
     {
@@ -155,7 +155,7 @@ const glossary = [
     { term: "Step", definition: "One email in a campaign sequence, with a delay and AI prompt template." },
     { term: "Draft", definition: "An AI-generated email that you can edit before sending." },
     { term: "RLS", definition: "Row Level Security — Supabase ensures you can only see your own data." },
-    { term: "Brevo", definition: "The email delivery service (300 free emails/day)." },
+    { term: "SMTP", definition: "Simple Mail Transfer Protocol — how ProspectIQ connects to your connected Gmail to send emails." },
     { term: "Groq", definition: "The AI provider powering email generation (Llama 3.3 70B model)." },
     { term: "QStash", definition: "Serverless scheduler that sends campaign emails at the right time." },
 ];
@@ -189,7 +189,7 @@ export default function GuidePage() {
                 <div className="guide-flow-arrow">→</div>
                 <div className="guide-flow-step">
                     <div className="guide-flow-num">4</div>
-                    <span>Send via Brevo</span>
+                    <span>Send via Gmail</span>
                 </div>
                 <div className="guide-flow-arrow">→</div>
                 <div className="guide-flow-step">
