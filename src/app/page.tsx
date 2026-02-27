@@ -1,9 +1,8 @@
-import { redirect } from "next/navigation";
+import { LandingPage } from "@/components/landing/landing-page";
 
 /**
- * Root page — redirects to the dashboard.
- * Auth middleware will bounce unauthenticated users to /login.
+ * Root page — marketing landing page.
  */
 export default function Home() {
-  redirect("/prospects");
+  return <LandingPage />;
 }

@@ -93,17 +93,11 @@ export function Sidebar() {
         <div className="sidebar-logo">
           <div className="sidebar-logo-icon">
             <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
-              <rect width="32" height="32" rx="8" fill="url(#sidebar-logo-grad)" />
-              <path d="M10 16L14 20L22 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              <defs>
-                <linearGradient id="sidebar-logo-grad" x1="0" y1="0" x2="32" y2="32">
-                  <stop stopColor="#6366f1" />
-                  <stop offset="1" stopColor="#8b5cf6" />
-                </linearGradient>
-              </defs>
+              <rect width="32" height="32" rx="6" fill="#ededed" />
+              <path d="M10 16L14 20L22 12" stroke="#000000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <span className="sidebar-logo-text">ProspectIQ</span>
+          <span className="sidebar-logo-text">P-IQ</span>
         </div>
 
         {/* Navigation */}

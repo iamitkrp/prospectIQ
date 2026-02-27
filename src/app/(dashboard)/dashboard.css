@@ -86,11 +86,11 @@
 
 .sidebar-nav-item.active {
     color: var(--text-primary);
-    background: rgba(99, 102, 241, 0.1);
+    background: var(--bg-hover);
 }
 
 .sidebar-nav-item.active .sidebar-nav-icon {
-    color: var(--brand-400);
+    color: var(--text-primary);
 }
 
 .sidebar-nav-icon {
@@ -247,19 +247,12 @@
     flex-shrink: 0;
 }
 
-.quick-action-icon.purple {
-    background: rgba(99, 102, 241, 0.15);
-    color: var(--brand-400);
-}
-
-.quick-action-icon.green {
-    background: rgba(34, 197, 94, 0.15);
-    color: var(--success);
-}
-
+.quick-action-icon.purple,
+.quick-action-icon.green,
 .quick-action-icon.blue {
-    background: rgba(59, 130, 246, 0.15);
-    color: var(--info);
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
 }
 
 .quick-action-title {
@@ -412,23 +405,24 @@
 }
 
 .error-btn.primary {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: #fff;
+    background: var(--text-primary);
+    color: var(--bg-primary);
 }
 
 .error-btn.primary:hover {
-    opacity: 0.9;
+    background: var(--text-secondary);
+    color: var(--bg-primary);
     transform: translateY(-1px);
 }
 
 .error-btn.secondary {
-    background: rgba(255, 255, 255, 0.06);
+    background: transparent;
     color: var(--text-primary);
     border: 1px solid var(--border-default);
 }
 
 .error-btn.secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-hover);
 }
 
 /* ===========================================
