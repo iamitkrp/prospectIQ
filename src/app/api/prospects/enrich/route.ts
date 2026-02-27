@@ -129,13 +129,20 @@ function resolveUrl(
         return manualUrl.trim();
     }
 
-    // 2. Company name — try the company's likely website (companyname.com)
+    // 2. Company name — try the company's likely website
     if (prospect.company_name?.trim()) {
-        const slug = prospect.company_name
-            .trim()
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "");
-        return `https://${slug}.com`;
+        let name = prospect.company_name.trim().toLowerCase();
+
+        // If the company name already looks like a domain (e.g., "amitkp.com")
+        if (name.includes(".")) {
+            name = name.replace(/\s+/g, ""); // Remove spaces just in case
+            return `https://${name}`;
+        }
+
+        const slug = name.replace(/[^a-z0-9]+/g, "");
+        if (slug) {
+            return `https://${slug}.com`;
+        }
     }
 
     // 3. LinkedIn — last resort (often blocked with HTTP 999)

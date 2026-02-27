@@ -118,11 +118,17 @@ export async function scrapeWebsite(
         };
 
         return { data: result, error: null };
-    } catch (err) {
+    } catch (err: any) {
         if (err instanceof DOMException && err.name === "AbortError") {
             return { data: null, error: "Request timed out (10s)" };
         }
         const message = err instanceof Error ? err.message : "Unknown error";
+
+        // Node's native fetch throws a generic "fetch failed" on DNS or connection errors
+        if (message === "fetch failed" || err?.cause?.code === "ENOTFOUND") {
+            return { data: null, error: "Website unreachable (domain may not exist or blocked access)" };
+        }
+
         return { data: null, error: message };
     }
 }
