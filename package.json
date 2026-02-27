@@ -17,6 +17,7 @@
     "@upstash/qstash": "^2.9.0",
     "cheerio": "^1.2.0",
     "groq-sdk": "^0.37.0",
+    "lucide-react": "^0.575.0",
     "next": "16.1.6",
     "nodemailer": "^8.0.1",
     "papaparse": "^5.5.3",
