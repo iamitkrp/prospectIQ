@@ -5,11 +5,19 @@ import { qstash } from "@/lib/qstash";
 import { executeCampaignStep } from "@/lib/campaign-engine";
 import type { Campaign, CampaignStep, Prospect } from "@/types/database";
 
+export interface CampaignWithStats extends Campaign {
+    stats: {
+        prospectCount: number;
+        sent: number;
+        replied: number;
+    };
+}
+
 /**
- * Fetch all campaigns for the authenticated user, newest first.
+ * Fetch all campaigns for the authenticated user, newest first, with top-level stats.
  */
 export async function getCampaigns(): Promise<{
-    data: Campaign[];
+    data: CampaignWithStats[];
     error: string | null;
 }> {
     const supabase = await createClient();
@@ -22,7 +30,7 @@ export async function getCampaigns(): Promise<{
         return { data: [], error: "Not authenticated" };
     }
 
-    const { data, error } = await supabase
+    const { data: campaigns, error } = await supabase
         .from("campaigns")
         .select("*")
         .order("created_at", { ascending: false });
@@ -31,7 +39,53 @@ export async function getCampaigns(): Promise<{
         return { data: [], error: error.message };
     }
 
-    return { data: (data ?? []) as Campaign[], error: null };
+    if (!campaigns || campaigns.length === 0) {
+        return { data: [], error: null };
+    }
+
+    const campaignIds = campaigns.map((c) => c.id);
+
+    // Prospect counts
+    const { data: cpRows } = await supabase
+        .from("campaign_prospects")
+        .select("campaign_id")
+        .in("campaign_id", campaignIds);
+
+    const prospectCounts = new Map<string, number>();
+    (cpRows ?? []).forEach((r) => {
+        prospectCounts.set(r.campaign_id, (prospectCounts.get(r.campaign_id) ?? 0) + 1);
+    });
+
+    // Email counts
+    const { data: logRows } = await supabase
+        .from("email_logs")
+        .select("campaign_id, status")
+        .in("campaign_id", campaignIds)
+        .in("status", ["SENT", "REPLIED"]);
+
+    const statusCounts = new Map<string, { sent: number; replied: number }>();
+    (logRows ?? []).forEach((r) => {
+        if (!statusCounts.has(r.campaign_id)) {
+            statusCounts.set(r.campaign_id, { sent: 0, replied: 0 });
+        }
+        const counts = statusCounts.get(r.campaign_id)!;
+        if (r.status === "SENT") counts.sent++;
+        if (r.status === "REPLIED") counts.replied++;
+    });
+
+    const enriched = campaigns.map((c) => {
+        const counts = statusCounts.get(c.id) ?? { sent: 0, replied: 0 };
+        return {
+            ...c,
+            stats: {
+                prospectCount: prospectCounts.get(c.id) ?? 0,
+                sent: counts.sent,
+                replied: counts.replied,
+            },
+        };
+    });
+
+    return { data: enriched as CampaignWithStats[], error: null };
 }
 
 /**

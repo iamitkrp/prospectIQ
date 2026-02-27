@@ -5,11 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Campaign } from "@/types/database";
 import { createCampaign, deleteCampaign } from "@/app/campaigns/actions";
+import type { CampaignWithStats } from "@/app/campaigns/actions";
 
 /* ── Status config ── */
 
 const STATUS_CONFIG: Record<
-    Campaign["status"],
+    CampaignWithStats["status"],
     { label: string; className: string; icon: string }
 > = {
     DRAFT: { label: "Draft", className: "badge-draft", icon: "📝" },
@@ -21,7 +22,7 @@ const STATUS_CONFIG: Record<
 /* ── Props ── */
 
 interface CampaignListProps {
-    campaigns: Campaign[];
+    campaigns: CampaignWithStats[];
 }
 
 export function CampaignList({ campaigns: initial }: CampaignListProps) {
@@ -48,7 +49,11 @@ export function CampaignList({ campaigns: initial }: CampaignListProps) {
             return;
         }
         if (data) {
-            setCampaigns([data, ...campaigns]);
+            const newCampaign: CampaignWithStats = {
+                ...data,
+                stats: { prospectCount: 0, sent: 0, replied: 0 },
+            };
+            setCampaigns([newCampaign, ...campaigns]);
         }
         setNewName("");
         setRequireApproval(false);
@@ -147,6 +152,21 @@ export function CampaignList({ campaigns: initial }: CampaignListProps) {
 
                                 <div className="campaign-card-meta">
                                     <span className="campaign-card-date">Created {created}</span>
+                                </div>
+
+                                <div className="campaign-card-stats">
+                                    <div className="campaign-stat-item">
+                                        <div className="campaign-stat-value">{campaign.stats.prospectCount}</div>
+                                        <div className="campaign-stat-label">Prospects</div>
+                                    </div>
+                                    <div className="campaign-stat-item">
+                                        <div className="campaign-stat-value">{campaign.stats.sent}</div>
+                                        <div className="campaign-stat-label">Sent</div>
+                                    </div>
+                                    <div className="campaign-stat-item">
+                                        <div className="campaign-stat-value">{campaign.stats.replied}</div>
+                                        <div className="campaign-stat-label">Replied</div>
+                                    </div>
                                 </div>
 
                                 <div className="campaign-card-actions">
