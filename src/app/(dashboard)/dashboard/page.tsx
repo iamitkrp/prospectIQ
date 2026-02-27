@@ -31,6 +31,50 @@ export default async function DashboardPage() {
                 </p>
             </div>
 
+            {/* Quick Actions */}
+            <div className="quick-actions" style={{ marginBottom: "2rem" }}>
+                <Link href="/prospects" className="quick-action-card">
+                    <div className="quick-action-icon purple">
+                        <svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="7" cy="6" r="3" />
+                            <path d="M1 17c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+                            <path d="M15 6v6M12 9h6" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div className="quick-action-title">Add Prospects</div>
+                        <div className="quick-action-desc">Import or add contacts manually</div>
+                    </div>
+                </Link>
+
+                <Link href="/campaigns/new" className="quick-action-card">
+                    <div className="quick-action-icon green">
+                        <svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M2 4h16M2 4v12a2 2 0 002 2h12a2 2 0 002-2V4" />
+                            <path d="M6 1v3M14 1v3" />
+                            <path d="M10 9v4M8 11h4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div className="quick-action-title">Start Campaign</div>
+                        <div className="quick-action-desc">Create an automated email sequence</div>
+                    </div>
+                </Link>
+
+                <Link href="/guide" className="quick-action-card">
+                    <div className="quick-action-icon blue">
+                        <svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M14 2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2z" />
+                            <path d="M7 7h6M7 10h6M7 13h4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div className="quick-action-title">Setup Guide</div>
+                        <div className="quick-action-desc">Follow the step-by-step walkthrough</div>
+                    </div>
+                </Link>
+            </div>
+
             {/* Stats */}
             <div className="stats-grid">
                 <div className="stat-card">
@@ -110,50 +154,6 @@ export default async function DashboardPage() {
                 {quota && <BrevoQuotaWidget quota={quota} />}
             </div>
 
-            {/* Quick Actions */}
-            <h2 className="section-title">Quick Actions</h2>
-            <div className="quick-actions">
-                <Link href="/prospects" className="quick-action-card">
-                    <div className="quick-action-icon purple">
-                        <svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="7" cy="6" r="3" />
-                            <path d="M1 17c0-3.3 2.7-6 6-6s6 2.7 6 6" />
-                            <path d="M15 6v6M12 9h6" />
-                        </svg>
-                    </div>
-                    <div>
-                        <div className="quick-action-title">Add Prospects</div>
-                        <div className="quick-action-desc">Import or add contacts manually</div>
-                    </div>
-                </Link>
-
-                <Link href="/campaigns/new" className="quick-action-card">
-                    <div className="quick-action-icon green">
-                        <svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M2 4h16M2 4v12a2 2 0 002 2h12a2 2 0 002-2V4" />
-                            <path d="M6 1v3M14 1v3" />
-                            <path d="M10 9v4M8 11h4" />
-                        </svg>
-                    </div>
-                    <div>
-                        <div className="quick-action-title">Start Campaign</div>
-                        <div className="quick-action-desc">Create an automated email sequence</div>
-                    </div>
-                </Link>
-
-                <Link href="/guide" className="quick-action-card">
-                    <div className="quick-action-icon blue">
-                        <svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M14 2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2z" />
-                            <path d="M7 7h6M7 10h6M7 13h4" />
-                        </svg>
-                    </div>
-                    <div>
-                        <div className="quick-action-title">Setup Guide</div>
-                        <div className="quick-action-desc">Follow the step-by-step walkthrough</div>
-                    </div>
-                </Link>
-            </div>
         </>
     );
 }
