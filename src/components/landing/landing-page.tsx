@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { ArrowRight, Box, Zap, Lock, BarChart3, Mail, Layers } from "lucide-react"; // Wait, lucide-react might not be installed. Let me check the package.json.
 // Actually, I should use standard SVGs to be safe, or just check package.json. I remember it only had recharts, supabase, tailwind. Let's use simple SVG icons.
+import { InteractiveBackground } from "./interactive-background";
 
 const FeatureCard = ({ title, description, icon }: { title: string, description: string, icon: React.ReactNode }) => (
-    <div className="flex flex-col gap-4 p-8 rounded-2xl bg-[#0a0a0a] border border-[#ffffff1a] transition-all hover:bg-[#111111] hover:border-[#ffffff33]">
+    <div className="flex flex-col gap-4 p-8 rounded-2xl bg-[#0a0a0a] border border-[#ffffff1a] transition-all hover:bg-[#111111] hover:border-[#ffffff33] relative z-10">
         <div className="w-12 h-12 rounded-lg bg-[#ffffff0a] flex items-center justify-center border border-[#ffffff1a] text-[#ededed]">
             {icon}
         </div>
@@ -14,7 +15,8 @@ const FeatureCard = ({ title, description, icon }: { title: string, description:
 
 export function LandingPage() {
     return (
-        <div className="min-h-screen bg-[#000000] text-[#ededed] selection:bg-[#ededed] selection:text-[#000000]">
+        <div className="relative min-h-screen bg-[#000000] text-[#ededed] selection:bg-[#ededed] selection:text-[#000000]">
+            <InteractiveBackground />
             {/* Navbar */}
             <header className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 py-4 md:px-12 bg-[#000000]/50 backdrop-blur-md border-b border-[#ffffff0a]">
                 <div className="flex items-center gap-2">
@@ -72,20 +74,108 @@ export function LandingPage() {
 
             {/* Hero Dashboard Preview */}
             <section className="px-6 md:px-12 pb-32 max-w-6xl mx-auto">
-                <div className="relative rounded-2xl overflow-hidden border border-[#ffffff1a] bg-[#0a0a0a] shadow-2xl">
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/80 to-transparent z-10" />
-                    <div className="h-10 border-b border-[#ffffff1a] bg-[#111111] flex items-center px-4 gap-2">
+                <div className="relative rounded-2xl overflow-hidden border border-[#ffffff1a] bg-[#000000] shadow-[0_0_50px_rgba(255,255,255,0.05)]">
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#000000] via-transparent to-transparent z-10 pointer-events-none" />
+
+                    {/* Browser Chrome */}
+                    <div className="h-10 border-b border-[#ffffff1a] bg-[#0a0a0a] flex items-center px-4 gap-4 relative z-20">
                         <div className="flex gap-1.5">
-                            <div className="w-3 h-3 rounded-full bg-[#3f3f46]" />
-                            <div className="w-3 h-3 rounded-full bg-[#3f3f46]" />
-                            <div className="w-3 h-3 rounded-full bg-[#3f3f46]" />
+                            <div className="w-3 h-3 rounded-full bg-[#27272a]" />
+                            <div className="w-3 h-3 rounded-full bg-[#27272a]" />
+                            <div className="w-3 h-3 rounded-full bg-[#27272a]" />
                         </div>
-                        <div className="mx-auto w-1/3 h-5 bg-[#18181b] rounded border border-[#ffffff0a]" />
+                        <div className="flex-1 max-w-md mx-auto hidden sm:flex items-center justify-center h-6 rounded bg-[#111111] border border-[#ffffff0a] text-[10px] text-[#52525b]">
+                            app.prospectiq.com/dashboard
+                        </div>
+                        <div className="w-16 hidden sm:block" /> {/* spacer */}
                     </div>
-                    <div className="p-8 grid grid-cols-3 gap-6 opacity-80">
-                        <div className="col-span-1 h-32 rounded-xl bg-[#111111] border border-[#ffffff0a]" />
-                        <div className="col-span-2 h-32 rounded-xl bg-[#111111] border border-[#ffffff0a]" />
-                        <div className="col-span-3 h-64 rounded-xl bg-[#111111] border border-[#ffffff0a]" />
+
+                    {/* Dashboard Content */}
+                    <div className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-0">
+
+                        {/* Sidebar (desktop only mock) */}
+                        <div className="hidden lg:flex flex-col gap-2 col-span-1 border-r border-[#ffffff0a] pr-6">
+                            <div className="h-8 w-24 bg-[#ffffff0a] rounded mb-6" />
+                            {[1, 2, 3, 4, 5].map(i => (
+                                <div key={i} className="flex items-center gap-3 p-2 rounded hover:bg-[#ffffff05] transition-colors">
+                                    <div className="w-5 h-5 rounded-[4px] bg-[#27272a]" />
+                                    <div className={`h-3 rounded-full bg-[#3f3f46] ${i === 1 ? 'w-20' : i === 2 ? 'w-24' : 'w-16'}`} />
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Main Content Area */}
+                        <div className="col-span-1 lg:col-span-2 flex flex-col gap-6">
+
+                            {/* Header row */}
+                            <div className="flex justify-between items-end mb-2">
+                                <div>
+                                    <div className="h-4 w-32 bg-[#ffffff1a] rounded mb-2" />
+                                    <div className="h-3 w-48 bg-[#27272a] rounded" />
+                                </div>
+                                <div className="hidden sm:flex h-8 w-24 bg-[#ededed] rounded items-center justify-center text-[10px] text-black font-semibold">
+                                    New Campaign
+                                </div>
+                            </div>
+
+                            {/* Stats Data row */}
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                <div className="p-4 rounded-xl bg-[#0a0a0a] border border-[#ffffff0a] flex flex-col gap-2 relative overflow-hidden">
+                                    <div className="text-[10px] font-medium text-[#71717a] uppercase tracking-wider">Emails Sent</div>
+                                    <div className="text-2xl font-semibold text-[#ededed]">14,204</div>
+                                    <div className="text-[10px] text-[#10b981]">+12.4% this week</div>
+                                    <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-[#ffffff05] rounded-full blur-xl" />
+                                </div>
+                                <div className="p-4 rounded-xl bg-[#0a0a0a] border border-[#ffffff0a] flex flex-col gap-2 relative overflow-hidden">
+                                    <div className="text-[10px] font-medium text-[#71717a] uppercase tracking-wider">Open Rate</div>
+                                    <div className="text-2xl font-semibold text-[#ededed]">48.2%</div>
+                                    <div className="text-[10px] text-[#10b981]">+4.1% this week</div>
+                                    <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-[#10b981]/10 rounded-full blur-xl" />
+                                </div>
+                                <div className="hidden md:flex p-4 rounded-xl bg-[#0a0a0a] border border-[#ffffff0a] flex-col gap-2 relative overflow-hidden">
+                                    <div className="text-[10px] font-medium text-[#71717a] uppercase tracking-wider">Reply Rate</div>
+                                    <div className="text-2xl font-semibold text-[#ededed]">8.4%</div>
+                                    <div className="text-[10px] text-[#71717a]">— Stable</div>
+                                    <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-[#3b82f6]/10 rounded-full blur-xl" />
+                                </div>
+                            </div>
+
+                            {/* Graph / Table Row */}
+                            <div className="p-5 rounded-xl bg-[#0a0a0a] border border-[#ffffff0a] flex flex-col gap-6">
+                                <div className="flex justify-between items-center border-b border-[#ffffff0a] pb-4">
+                                    <div className="h-3 w-24 bg-[#52525b] rounded" />
+                                    <div className="flex gap-2">
+                                        <div className="w-12 h-5 bg-[#18181b] rounded" />
+                                        <div className="w-12 h-5 bg-[#ffffff1a] rounded" />
+                                    </div>
+                                </div>
+
+                                {/* Mock Table Rows */}
+                                <div className="flex flex-col gap-3">
+                                    {[1, 2, 3, 4].map((row, idx) => (
+                                        <div key={row} className="flex items-center justify-between p-2 hover:bg-[#ffffff05] rounded-lg transition-colors">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-[#27272a] flex items-center justify-center text-[10px] text-[#71717a]">
+                                                    {String.fromCharCode(65 + idx)}
+                                                </div>
+                                                <div className="flex flex-col gap-1.5">
+                                                    <div className="h-3 w-28 bg-[#ededed] rounded" />
+                                                    <div className="h-2 w-32 bg-[#52525b] rounded" />
+                                                </div>
+                                            </div>
+                                            <div className="hidden sm:flex items-center gap-8">
+                                                <div className="h-2 w-16 bg-[#3f3f46] rounded" />
+                                                <div className="h-2 w-12 bg-[#27272a] rounded" />
+                                                <div className={`px-2 py-1 rounded text-[9px] font-semibold ${idx === 0 || idx === 2 ? 'bg-[#10b981]/10 text-[#10b981]' : 'bg-[#ffffff0a] text-[#a1a1aa]'}`}>
+                                                    {idx === 0 || idx === 2 ? 'Replied' : 'Sent'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
             </section>
