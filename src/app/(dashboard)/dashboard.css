@@ -141,11 +141,11 @@
 }
 
 .page-title {
-    font-size: 1.75rem;
-    font-weight: 700;
+    font-size: 2.25rem;
+    font-weight: 600;
     color: var(--text-primary);
-    letter-spacing: -0.025em;
-    margin-bottom: 0.25rem;
+    letter-spacing: -0.04em;
+    margin-bottom: 0.5rem;
 }
 
 .page-subtitle {
@@ -162,16 +162,16 @@
 }
 
 .stat-card {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-subtle);
+    background: #0a0a0a;
+    border: 1px solid #ffffff1a;
     border-radius: var(--radius-lg);
     padding: 1.5rem;
     transition: all var(--transition-fast);
 }
 
 .stat-card:hover {
-    border-color: var(--border-default);
-    box-shadow: var(--shadow-sm);
+    border-color: #ffffff33;
+    background: #111111;
 }
 
 .stat-label {
@@ -184,10 +184,10 @@
 }
 
 .stat-value {
-    font-size: 2rem;
-    font-weight: 700;
+    font-size: 2.25rem;
+    font-weight: 600;
     color: var(--text-primary);
-    letter-spacing: -0.025em;
+    letter-spacing: -0.04em;
 }
 
 .stat-change {
@@ -202,13 +202,13 @@
 }
 
 .stat-change.positive {
-    color: var(--success);
-    background: rgba(34, 197, 94, 0.1);
+    color: #10b981;
+    background: #10b9811a;
 }
 
 .stat-change.negative {
-    color: var(--error);
-    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    background: #ef44441a;
 }
 
 /* Quick Actions */
@@ -223,18 +223,17 @@
     align-items: center;
     gap: 1rem;
     padding: 1.25rem 1.5rem;
-    background: var(--bg-surface);
-    border: 1px solid var(--border-subtle);
+    background: #0a0a0a;
+    border: 1px solid #ffffff1a;
     border-radius: var(--radius-lg);
     text-decoration: none;
     transition: all var(--transition-fast);
 }
 
 .quick-action-card:hover {
-    border-color: var(--brand-500);
-    background: var(--bg-elevated);
+    border-color: #ffffff33;
+    background: #111111;
     transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
 }
 
 .quick-action-icon {
@@ -250,9 +249,9 @@
 .quick-action-icon.purple,
 .quick-action-icon.green,
 .quick-action-icon.blue {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-    border: 1px solid var(--border-subtle);
+    background: #ffffff0a;
+    color: #ededed;
+    border: 1px solid #ffffff1a;
 }
 
 .quick-action-title {

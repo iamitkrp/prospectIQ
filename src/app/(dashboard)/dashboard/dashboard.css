@@ -110,8 +110,8 @@
 
 .chart-card,
 .quota-card {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-default);
+    background: #0a0a0a;
+    border: 1px solid #ffffff1a;
     border-radius: var(--radius-md, 12px);
     padding: 1.25rem;
 }
@@ -181,20 +181,20 @@
 .quota-bar-fill {
     height: 100%;
     border-radius: 999px;
-    background: linear-gradient(90deg, #22c55e, #4ade80);
+    background: #ededed;
     transition: width 0.6s ease;
 }
 
 .quota-bar-fill.monthly {
-    background: linear-gradient(90deg, #6366f1, #818cf8);
+    background: #ededed;
 }
 
 .quota-bar-fill.warning {
-    background: linear-gradient(90deg, #f59e0b, #fbbf24) !important;
+    background: #f59e0b !important;
 }
 
 .quota-bar-fill.danger {
-    background: linear-gradient(90deg, #ef4444, #f87171) !important;
+    background: #ef4444 !important;
 }
 
 .quota-remaining {

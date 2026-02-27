@@ -25,9 +25,9 @@ export default async function DashboardPage() {
     return (
         <>
             <div className="page-header">
-                <h1 className="page-title">Welcome back, {firstName} 👋</h1>
+                <h1 className="page-title">Welcome, {firstName}</h1>
                 <p className="page-subtitle">
-                    Here&apos;s an overview of your outreach pipeline.
+                    Here's an overview of your outreach pipeline.
                 </p>
             </div>
 
@@ -58,18 +58,18 @@ export default async function DashboardPage() {
             {stats?.campaignAnalytics && stats.campaignAnalytics.length > 0 && (
                 <>
                     <h2 className="section-title">Campaign Analytics</h2>
-                    <div className="table-wrapper">
-                        <table className="data-table campaign-analytics-table">
+                    <div className="overflow-x-auto rounded-xl border border-[#ffffff0a] bg-[#0a0a0a]">
+                        <table className="w-full text-sm text-left whitespace-nowrap">
                             <thead>
                                 <tr>
-                                    <th>Campaign</th>
-                                    <th>Status</th>
-                                    <th>Prospects</th>
-                                    <th>Sent</th>
-                                    <th>Pending</th>
-                                    <th>Failed</th>
-                                    <th>Replied</th>
-                                    <th>Rate</th>
+                                    <th className="text-left py-3 px-4 text-xs font-semibold text-[#71717a] uppercase tracking-wider border-b border-[#ffffff0a]">Campaign</th>
+                                    <th className="text-left py-3 px-4 text-xs font-semibold text-[#71717a] uppercase tracking-wider border-b border-[#ffffff0a]">Status</th>
+                                    <th className="text-right py-3 px-4 text-xs font-semibold text-[#71717a] uppercase tracking-wider border-b border-[#ffffff0a]">Prospects</th>
+                                    <th className="text-right py-3 px-4 text-xs font-semibold text-[#71717a] uppercase tracking-wider border-b border-[#ffffff0a]">Sent</th>
+                                    <th className="text-right py-3 px-4 text-xs font-semibold text-[#71717a] uppercase tracking-wider border-b border-[#ffffff0a]">Pending</th>
+                                    <th className="text-right py-3 px-4 text-xs font-semibold text-[#71717a] uppercase tracking-wider border-b border-[#ffffff0a]">Failed</th>
+                                    <th className="text-right py-3 px-4 text-xs font-semibold text-[#71717a] uppercase tracking-wider border-b border-[#ffffff0a]">Replied</th>
+                                    <th className="text-right py-3 px-4 text-xs font-semibold text-[#71717a] uppercase tracking-wider border-b border-[#ffffff0a]">Rate</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -77,23 +77,23 @@ export default async function DashboardPage() {
                                     const total = c.sent + c.replied;
                                     const rate = total > 0 ? Math.round((c.replied / total) * 100) : null;
                                     return (
-                                        <tr key={c.campaignId}>
-                                            <td className="cell-name">
-                                                <Link href={`/campaigns/${c.campaignId}`} className="analytics-link">
+                                        <tr key={c.campaignId} className="hover:bg-[#ffffff05] transition-colors group">
+                                            <td className="py-3 px-4 border-b border-[#ffffff0a]">
+                                                <Link href={`/campaigns/${c.campaignId}`} className="text-[#ededed] font-medium group-hover:text-white transition-colors">
                                                     {c.campaignName}
                                                 </Link>
                                             </td>
-                                            <td>
-                                                <span className={`status-badge status-${c.status.toLowerCase()}`}>
+                                            <td className="py-3 px-4 border-b border-[#ffffff0a]">
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium ${c.status === 'ACTIVE' ? 'bg-[#10b981]/10 text-[#10b981]' : 'bg-[#ffffff0a] text-[#a1a1aa]'}`}>
                                                     {c.status}
                                                 </span>
                                             </td>
-                                            <td className="num-cell">{c.prospectCount}</td>
-                                            <td className="num-cell sent">{c.sent}</td>
-                                            <td className="num-cell pending">{c.pending}</td>
-                                            <td className="num-cell failed">{c.failed}</td>
-                                            <td className="num-cell replied">{c.replied}</td>
-                                            <td className="num-cell">
+                                            <td className="py-3 px-4 text-right text-[#a1a1aa] border-b border-[#ffffff0a]">{c.prospectCount}</td>
+                                            <td className="py-3 px-4 text-right text-[#ededed] border-b border-[#ffffff0a]">{c.sent}</td>
+                                            <td className="py-3 px-4 text-right text-[#a1a1aa] border-b border-[#ffffff0a]">{c.pending}</td>
+                                            <td className="py-3 px-4 text-right text-[#ef4444] border-b border-[#ffffff0a]">{c.failed}</td>
+                                            <td className="py-3 px-4 text-right text-[#10b981] border-b border-[#ffffff0a]">{c.replied}</td>
+                                            <td className="py-3 px-4 text-right text-[#ededed] font-medium border-b border-[#ffffff0a]">
                                                 {rate !== null ? `${rate}%` : "—"}
                                             </td>
                                         </tr>
