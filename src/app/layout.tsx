@@ -14,15 +14,14 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "ProspectIQ — Zero-Cost Outreach Engine",
+    default: "ProspectIQ — Intelligent Outreach Engine",
     template: "%s | ProspectIQ",
   },
-  description:
-    "Discover prospects, generate AI-powered emails, and automate outreach sequences — all on free-tier infrastructure.",
+  description: "Discover prospects, generate AI-powered emails, and automate outreach sequences seamlessly.",
   openGraph: {
-    title: "ProspectIQ — Zero-Cost Outreach Engine",
+    title: "ProspectIQ — Intelligent Outreach Engine",
     description:
-      "Discover prospects, generate AI-powered emails, and automate outreach sequences — all on free-tier infrastructure.",
+      "Discover prospects, generate AI-powered emails, and automate outreach sequences seamlessly.",
     siteName: "ProspectIQ",
     locale: "en_US",
     type: "website",

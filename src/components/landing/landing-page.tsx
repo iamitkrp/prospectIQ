@@ -52,16 +52,16 @@ export function LandingPage() {
                 </div>
 
                 <h1 className="text-4xl sm:text-5xl md:text-7xl font-semibold tracking-tighter mb-6 max-w-4xl text-balance bg-clip-text text-transparent bg-gradient-to-b from-[#ffffff] to-[#a1a1aa] leading-[1.1]">
-                    Zero-Cost Outreach,<br /> Infinite Scale.
+                    Precision Outreach,<br /> Infinite Scale.
                 </h1>
 
                 <p className="text-lg md:text-xl text-[#a1a1aa] max-w-2xl mb-10 text-balance leading-relaxed">
-                    Discover prospects, generate AI-powered sequence emails, and automate your entire outreach workflow—all on free-tier infrastructure.
+                    Discover prospects, generate AI-powered sequence emails, and automate your entire outreach workflow—all from a single, powerful platform.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
                     <Link href="/login" className="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 rounded-lg bg-[#ededed] text-[#000000] font-medium hover:bg-[#ffffff] transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-                        Start Deploying Free
+                        Get Started
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
@@ -188,7 +188,7 @@ export function LandingPage() {
                             Built for performance.
                         </h2>
                         <p className="text-lg text-[#a1a1aa] max-w-2xl">
-                            Everything you need to launch world-class unmetered cold email campaigns without the enterprise software price tag.
+                            Everything you need to launch world-class cold email campaigns with enterprise-grade reliability and precision.
                         </p>
                     </div>
 
@@ -213,7 +213,7 @@ export function LandingPage() {
                         />
                         <FeatureCard
                             title="Smart Schedulers"
-                            description="Built-in QStash queuing ensures you stay within free-tier email constraints automatically."
+                            description="Intelligent queuing ensures optimal delivery rates and automatically manages sending limits."
                             icon={
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                                     <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" />
@@ -258,10 +258,10 @@ export function LandingPage() {
                     Ready to scale your outreach?
                 </h2>
                 <p className="text-[#a1a1aa] mb-10 max-w-xl text-lg">
-                    Join the next generation of sales teams leveraging AI and free-tier infrastructure.
+                    Join the next generation of sales teams leveraging AI and scalable automation.
                 </p>
                 <Link href="/login" className="px-8 py-4 rounded-lg bg-[#ededed] text-[#000000] font-semibold hover:bg-[#ffffff] transition-colors">
-                    Start for free
+                    Start your campaign
                 </Link>
             </section>
 
