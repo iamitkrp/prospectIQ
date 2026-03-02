@@ -43,7 +43,7 @@ function decrypt(text: string): string | null {
         let decrypted = decipher.update(encryptedText);
         decrypted = Buffer.concat([decrypted, decipher.final()]);
         return decrypted.toString();
-    } catch (e) {
+    } catch {
         return null;
     }
 }
@@ -173,9 +173,9 @@ export async function POST(request: NextRequest) {
                 html: emailBody.replace(/\n/g, '<br/>'),
             });
             sendSuccess = true;
-        } catch (err: any) {
+        } catch (err: unknown) {
             sendSuccess = false;
-            sendError = err.message || "SMTP send failed.";
+            sendError = err instanceof Error ? err.message : "SMTP send failed.";
             console.error("[email/send] SMTP error:", err);
         }
 

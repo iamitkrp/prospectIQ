@@ -124,14 +124,14 @@ export async function scrapeWebsite(
         };
 
         return { data: result, error: null };
-    } catch (err: any) {
+    } catch (err: unknown) {
         if (err instanceof DOMException && err.name === "AbortError") {
             return { data: null, error: "Request timed out (10s)" };
         }
         const message = err instanceof Error ? err.message : "Unknown error";
 
         // Node's native fetch throws a generic "fetch failed" on DNS or connection errors
-        if (message === "fetch failed" || err?.cause?.code === "ENOTFOUND") {
+        if (message === "fetch failed" || (err as { cause?: { code?: string } })?.cause?.code === "ENOTFOUND") {
             return { data: null, error: "Website unreachable (domain may not exist or blocked access)" };
         }
 
@@ -296,7 +296,7 @@ async function scrapeLinkedIn(
 
         console.log(`[enrich] Enrichment complete for ${linkedinUrl}: ${result.keyParagraphs.length} total paragraphs`);
         return { data: result, error: null };
-    } catch (err: any) {
+    } catch (err: unknown) {
         if (err instanceof DOMException && err.name === "AbortError") {
             return { data: null, error: "Proxycurl request timed out (20s). Try again." };
         }
@@ -312,6 +312,7 @@ async function scrapeLinkedIn(
  * Extract the best company/personal website URL from a LinkedIn profile response.
  * Checks: experiences[0].company_linkedin_profile_url domain, personal websites, etc.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractCompanyUrl(profile: Record<string, any>): string | null {
     // 1. Check if the current company has a website in its LinkedIn data
     if (profile.experiences?.length) {

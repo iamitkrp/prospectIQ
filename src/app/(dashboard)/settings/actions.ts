@@ -27,7 +27,7 @@ function decrypt(text: string) {
         let decrypted = decipher.update(encryptedText);
         decrypted = Buffer.concat([decrypted, decipher.final()]);
         return decrypted.toString();
-    } catch (e) {
+    } catch {
         return null;
     }
 }
@@ -69,8 +69,8 @@ export async function verifySmtpConnection({ email, password }: { email: string,
 
         await transporter.verify();
         return { success: true };
-    } catch (error: any) {
-        return { error: error.message || "Failed to verify connection to Gmail." };
+    } catch (error: unknown) {
+        return { error: error instanceof Error ? error.message : "Failed to verify connection to Gmail." };
     }
 }
 
@@ -102,8 +102,8 @@ export async function saveSmtpSettings({ email, password }: { email: string, pas
         if (error) throw error;
 
         return { success: true };
-    } catch (error: any) {
-        return { error: error.message || "Something went wrong saving settings." };
+    } catch (error: unknown) {
+        return { error: error instanceof Error ? error.message : "Something went wrong saving settings." };
     }
 }
 
@@ -127,8 +127,8 @@ export async function disconnectSmtpSettings() {
         if (error) throw error;
 
         return { success: true };
-    } catch (error: any) {
-        return { error: error.message || "Failed to disconnect settings." };
+    } catch (error: unknown) {
+        return { error: error instanceof Error ? error.message : "Failed to disconnect settings." };
     }
 }
 
@@ -159,8 +159,8 @@ export async function saveEnrichKey(apiKey: string) {
         if (error) throw error;
 
         return { success: true };
-    } catch (error: any) {
-        return { error: error.message || "Failed to save API key." };
+    } catch (error: unknown) {
+        return { error: error instanceof Error ? error.message : "Failed to save API key." };
     }
 }
 
@@ -181,8 +181,8 @@ export async function deleteEnrichKey() {
         if (error) throw error;
 
         return { success: true };
-    } catch (error: any) {
-        return { error: error.message || "Failed to remove API key." };
+    } catch (error: unknown) {
+        return { error: error instanceof Error ? error.message : "Failed to remove API key." };
     }
 }
 

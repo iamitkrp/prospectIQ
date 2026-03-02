@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveSmtpSettings, disconnectSmtpSettings } from "./actions";
 
-export function SmtpForm({ initialSettings }: { initialSettings: any }) {
+export function SmtpForm({ initialSettings }: { initialSettings: { smtp_email?: string; is_smtp_verified?: boolean } | null }) {
     const [email, setEmail] = useState(initialSettings?.smtp_email || "");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -32,8 +32,8 @@ export function SmtpForm({ initialSettings }: { initialSettings: any }) {
             setSuccess("Gmail connected successfully!");
             setPassword("");
             router.refresh();
-        } catch (err: any) {
-            setError(err.message || "Failed to connect.");
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to connect.");
         } finally {
             setLoading(false);
         }
@@ -50,8 +50,8 @@ export function SmtpForm({ initialSettings }: { initialSettings: any }) {
             setPassword("");
             setSuccess("Disconnected successfully.");
             router.refresh();
-        } catch (err: any) {
-            setError(err.message || "Failed to disconnect.");
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to disconnect.");
         } finally {
             setLoading(false);
         }
@@ -71,7 +71,7 @@ export function SmtpForm({ initialSettings }: { initialSettings: any }) {
                     </svg>
                     <div>
                         <span className="smtp-status-title">Connected</span>
-                        <span className="smtp-status-email">{initialSettings.smtp_email}</span>
+                        <span className="smtp-status-email">{initialSettings?.smtp_email}</span>
                     </div>
                 </div>
             )}

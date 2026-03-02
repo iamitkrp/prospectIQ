@@ -31,9 +31,9 @@ export function AuthForm({ mode, action }: AuthFormProps) {
             if (result && "success" in result && result.success) {
                 setSuccess(result.success);
             }
-            if (result && "redirect" in result && (result as any).redirect) {
+            if (result && "redirect" in result && (result as { redirect: string }).redirect) {
                 // Full page navigation to ensure cookies are sent with the request
-                window.location.href = (result as any).redirect;
+                window.location.href = (result as { redirect: string }).redirect;
                 return;
             }
         } catch {

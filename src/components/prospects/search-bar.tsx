@@ -32,9 +32,6 @@ export function SearchBar({ resultCount, queryTimeMs }: SearchBarProps) {
             firstRender.current = false;
             return;
         }
-
-        setIsSearching(true);
-
         if (debounceRef.current) clearTimeout(debounceRef.current);
 
         debounceRef.current = setTimeout(() => {
@@ -67,14 +64,20 @@ export function SearchBar({ resultCount, queryTimeMs }: SearchBarProps) {
                     className="search-bar-input"
                     placeholder='Search prospects… e.g. "CTO Fintech"'
                     value={value}
-                    onChange={(e) => setValue(e.target.value)}
+                    onChange={(e) => {
+                        setValue(e.target.value);
+                        setIsSearching(true);
+                    }}
                     autoComplete="off"
                     spellCheck={false}
                 />
                 {value && (
                     <button
                         className="search-bar-clear"
-                        onClick={() => setValue("")}
+                        onClick={() => {
+                            setValue("");
+                            setIsSearching(true);
+                        }}
                         title="Clear search"
                     >
                         ✕

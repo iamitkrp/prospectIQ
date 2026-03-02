@@ -27,7 +27,7 @@ export default async function DashboardPage() {
             <div className="page-header">
                 <h1 className="page-title">Welcome, {firstName}</h1>
                 <p className="page-subtitle">
-                    Here's an overview of your outreach pipeline.
+                    Here&apos;s an overview of your outreach pipeline.
                 </p>
             </div>
 

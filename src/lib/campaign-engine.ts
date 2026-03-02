@@ -31,7 +31,7 @@ function decrypt(text: string) {
         let decrypted = decipher.update(encryptedText);
         decrypted = Buffer.concat([decrypted, decipher.final()]);
         return decrypted.toString();
-    } catch (e) {
+    } catch {
         return null;
     }
 }
@@ -262,8 +262,6 @@ export async function executeCampaignStep(
     }
 
     /* ── 6. Send via User's SMTP ── */
-    const recipientName = [prospect.first_name, prospect.last_name].filter(Boolean).join(" ") || undefined;
-
     const decryptedPassword = decrypt(userSettings.smtp_app_password);
     if (!decryptedPassword) {
         console.error(`[executeCampaignStep] Failed to decrypt SMTP password for user ${campaign.user_id}. Pausing campaign.`);
@@ -295,10 +293,10 @@ export async function executeCampaignStep(
             html: emailBody.replace(/\n/g, '<br/>'), // Very basic HTML formatting
         });
         sendSuccess = true;
-    } catch (err: any) {
+    } catch (err: unknown) {
         sendSuccess = false;
-        sendErrorMsg = err.message || "Unknown SMTP Error";
-        sendErrorCode = err.code || "SMTP_ERROR";
+        sendErrorMsg = err instanceof Error ? err.message : "Unknown SMTP Error";
+        sendErrorCode = err && typeof err === "object" && "code" in err && typeof err.code === "string" ? err.code : "SMTP_ERROR";
         console.error("[executeCampaignStep] SMTP Send Error:", err);
     }
 
@@ -416,7 +414,7 @@ export async function approveAndSendEmail(logId: string, subject: string, body: 
         .single();
 
     if (logErr || !log) throw new Error("Draft not found");
-    const prospectEmail = (log.prospects as any).email;
+    const prospectEmail = (log.prospects as unknown as { email: string }).email;
 
     // Fetch campaign user_id
     const { data: campaign } = await supabase

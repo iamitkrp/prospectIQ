@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { createClient } = require('@supabase/supabase-js');
 const supabaseUrl = 'https://kmudtavmnvvxqyqshtvp.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImttdWR0YXZtbnZ2eHF5cXNodHZwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDg2ODIxOSwiZXhwIjoyMDg2NDQ0MjE5fQ.si8tIQ0A-LsIctQCSzNs8GV5gBQRfRuz0dbOIfKhvLY';

@@ -372,7 +372,7 @@ export async function getAvailableProspects(campaignId: string): Promise<{
     const assignedIds = (assigned ?? []).map((r) => r.prospect_id);
 
     // Fetch all user prospects, filter out assigned
-    let query = supabase
+    const query = supabase
         .from("prospects")
         .select("*")
         .eq("user_id", user.id)
@@ -634,7 +634,7 @@ export interface PipelineEntry {
  */
 export async function getCampaignProspectPipeline(
     campaignId: string,
-    totalSteps: number
+    _totalSteps: number
 ): Promise<PipelineEntry[]> {
     const supabase = await createClient();
     const {
@@ -882,7 +882,7 @@ export async function getPendingApprovals(campaignId: string): Promise<{ data: P
         return { data: [], error: error.message };
     }
 
-    return { data: data as any as PendingApproval[], error: null };
+    return { data: data as unknown as PendingApproval[], error: null };
 }
 
 /**
@@ -925,7 +925,7 @@ export async function approveEmailTask(logId: string, subject: string, body: str
         const { approveAndSendEmail } = await import("@/lib/campaign-engine");
         await approveAndSendEmail(logId, subject, body);
         return { error: null };
-    } catch (err: any) {
-        return { error: err.message || "Failed to approve and send email" };
+    } catch (err: unknown) {
+        return { error: err instanceof Error ? err.message : "Failed to approve and send email" };
     }
 }
