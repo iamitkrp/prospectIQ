@@ -39,22 +39,24 @@ export default async function SettingsPage() {
                         <h3 className="smtp-instructions-title">How to connect</h3>
                         <ol className="smtp-steps">
                             <li>
-                                Go to your{" "}
-                                <a href="https://myaccount.google.com/security" target="_blank" rel="noreferrer">
-                                    Google Account Security
-                                </a>
+                                <div className="step-text">
+                                    Go to your{" "}
+                                    <a href="https://myaccount.google.com/security" target="_blank" rel="noreferrer">
+                                        Google Account Security
+                                    </a>
+                                </div>
                             </li>
                             <li>
-                                Turn on <strong>2-Step Verification</strong>
+                                <div className="step-text">Turn on <strong>2-Step Verification</strong></div>
                             </li>
                             <li>
-                                Search for <strong>App Passwords</strong>
+                                <div className="step-text">Search for <strong>App Passwords</strong></div>
                             </li>
                             <li>
-                                Create one named <strong>&quot;ProspectIQ&quot;</strong> — Google gives you a 16-letter code
+                                <div className="step-text">Create one named <strong>&quot;ProspectIQ&quot;</strong> — Google gives you a 16-letter code</div>
                             </li>
                             <li>
-                                Paste that code and your email here →
+                                <div className="step-text">Paste that code and your email here &rarr;</div>
                             </li>
                         </ol>
                     </div>
@@ -88,17 +90,19 @@ export default async function SettingsPage() {
                         <h3 className="smtp-instructions-title">How to connect</h3>
                         <ol className="smtp-steps">
                             <li>
-                                Sign up at{" "}
-                                <a href="https://enrichlayer.com" target="_blank" rel="noreferrer">
-                                    enrichlayer.com
-                                </a>{" "}
-                                — you get <strong>200 free credits</strong>
+                                <div className="step-text">
+                                    Sign up at{" "}
+                                    <a href="https://enrichlayer.com" target="_blank" rel="noreferrer">
+                                        enrichlayer.com
+                                    </a>{" "}
+                                    — you get <strong>200 free credits</strong>
+                                </div>
                             </li>
                             <li>
-                                Go to <strong>Enrich Layer API → API Key</strong>
+                                <div className="step-text">Go to <strong>Enrich Layer API &rarr; API Key</strong></div>
                             </li>
                             <li>
-                                Copy your API key and paste it here →
+                                <div className="step-text">Copy your API key and paste it here &rarr;</div>
                             </li>
                         </ol>
                         <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.75rem" }}>
