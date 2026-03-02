@@ -25,7 +25,7 @@ const steps = [
             "Go to the **Prospects** page from the sidebar",
             "Click **\"Add Prospect\"** to add contacts one by one",
             "Fill in their details: name, email, company, role, and LinkedIn URL",
-            "Or use **CSV Import** (coming soon) to bulk-upload hundreds at once",
+            "Or use **CSV Import** to bulk-upload hundreds at once",
         ],
         tip: "The more details you add (company, role), the better the AI can personalize emails later.",
         link: "/prospects",
@@ -52,7 +52,6 @@ const steps = [
             "This context is automatically fed into the AI when generating emails in Step 3",
         ],
         tip: "The best outreach references something specific and recent. Even 2 minutes of manual research on LinkedIn can dramatically improve your email's relevance.",
-        status: "Coming in Sprint 1.4",
     },
     {
         number: "03",
@@ -74,7 +73,6 @@ const steps = [
             "Click **\"Send\"** to deliver it via email, or save it for a campaign",
         ],
         tip: "Prospects with enrichment data produce significantly better AI drafts. Always research before generating.",
-        status: "Coming in Phase 2",
     },
     {
         number: "04",
@@ -95,7 +93,6 @@ const steps = [
             "Track your daily send count on the Dashboard",
         ],
         tip: "Google strictly limits daily sending (often 300 to 500 max). Start slow to protect your domain reputation.",
-        status: "Coming in Phase 2",
     },
     {
         number: "05",
@@ -119,7 +116,6 @@ const steps = [
             "Click **\"Start\"** — ProspectIQ will send Step 1 immediately, then wait, then send Step 2, etc.",
         ],
         tip: "A classic 3-step sequence: Day 1 = Introduction, Day 4 = Follow-up with value, Day 8 = Friendly break-up email. Keep each email short and focused.",
-        status: "Coming in Phase 3",
     },
     {
         number: "06",
@@ -213,7 +209,6 @@ export default function GuidePage() {
                                 <span className="guide-card-num">Step {step.number}</span>
                                 <h2 className="guide-card-title">{step.title}</h2>
                             </div>
-                            {step.status && <span className="guide-badge">{step.status}</span>}
                         </div>
 
                         <div className="guide-card-body">
