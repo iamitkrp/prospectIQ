@@ -37,13 +37,19 @@ const MAX_BODY_SIZE = 500_000; // 500 KB — don't download massive pages
  * @returns Enrichment data or an error message
  */
 export async function scrapeWebsite(
-    url: string
+    url: string,
+    apiKey?: string | null
 ): Promise<{ data: EnrichmentResult | null; error: string | null }> {
     try {
         // Normalise URL
         let normalised = url.trim();
         if (!/^https?:\/\//i.test(normalised)) {
             normalised = "https://" + normalised;
+        }
+
+        // LinkedIn URLs → route through Google cache or dedicated parser
+        if (/linkedin\.com\/in\//i.test(normalised)) {
+            return scrapeLinkedIn(normalised, apiKey);
         }
 
         const controller = new AbortController();
@@ -131,6 +137,220 @@ export async function scrapeWebsite(
 
         return { data: null, error: message };
     }
+}
+
+/**
+ * Fetch a LinkedIn profile via the Enrich Layer API (Proxycurl-compatible).
+ * Requires user-provided API key or PROXYCURL_API_KEY env var fallback.
+ * Docs: https://enrichlayer.com/docs/api/person-profile-endpoint
+ */
+async function scrapeLinkedIn(
+    linkedinUrl: string,
+    userApiKey?: string | null
+): Promise<{ data: EnrichmentResult | null; error: string | null }> {
+    const apiKey = userApiKey || process.env.PROXYCURL_API_KEY;
+    if (!apiKey) {
+        return {
+            data: null,
+            error: "Please connect your Enrich Layer API key in Settings to enable LinkedIn enrichment.",
+        };
+    }
+
+    try {
+        console.log(`[enrich] Fetching LinkedIn profile via Enrich Layer: ${linkedinUrl}`);
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20_000);
+
+        const response = await fetch(
+            `https://enrichlayer.com/api/v2/profile?linkedin_profile_url=${encodeURIComponent(linkedinUrl)}&extra=include`,
+            {
+                headers: {
+                    Authorization: `Bearer ${apiKey}`,
+                },
+                signal: controller.signal,
+            }
+        );
+
+        clearTimeout(timeout);
+
+        if (!response.ok) {
+            const errBody = await response.text();
+            console.error(`[enrich] Proxycurl error (${response.status}):`, errBody);
+
+            if (response.status === 401 || response.status === 403) {
+                return { data: null, error: "Proxycurl API key is invalid or expired." };
+            }
+            if (response.status === 404) {
+                return { data: null, error: "LinkedIn profile not found via Proxycurl. Check the URL." };
+            }
+            if (response.status === 429) {
+                return { data: null, error: "Proxycurl rate limit hit. Try again later." };
+            }
+            return { data: null, error: `Proxycurl returned HTTP ${response.status}: ${errBody.slice(0, 200)}` };
+        }
+
+        const profile = await response.json();
+
+        // Build structured paragraphs from the profile data
+        const keyParagraphs: string[] = [];
+
+        if (profile.headline) {
+            keyParagraphs.push(`Headline: ${profile.headline}`);
+        }
+        if (profile.summary) {
+            keyParagraphs.push(profile.summary);
+        }
+
+        // Experience entries
+        if (profile.experiences?.length) {
+            for (const exp of profile.experiences.slice(0, 4)) {
+                const parts = [exp.title, exp.company, exp.description?.slice(0, 300)].filter(Boolean);
+                if (parts.length) {
+                    keyParagraphs.push(`Experience: ${parts.join(" — ")}`);
+                }
+            }
+        }
+
+        // Education
+        if (profile.education?.length) {
+            for (const edu of profile.education.slice(0, 2)) {
+                const parts = [edu.degree_name, edu.field_of_study, edu.school].filter(Boolean);
+                if (parts.length) {
+                    keyParagraphs.push(`Education: ${parts.join(", ")}`);
+                }
+            }
+        }
+
+        // Skills
+        if (profile.skills?.length) {
+            keyParagraphs.push(`Skills: ${profile.skills.join(", ")}`);
+        }
+
+        // Headings from profile
+        const headings: string[] = [];
+        if (profile.full_name) headings.push(profile.full_name);
+        if (profile.headline) headings.push(profile.headline);
+        if (profile.occupation) headings.push(profile.occupation);
+
+        // Social links
+        const socialLinks: Record<string, string> = { linkedin: linkedinUrl };
+        if (profile.personal_emails?.length) {
+            socialLinks.email = profile.personal_emails[0];
+        }
+        if (profile.github_profile_id) {
+            socialLinks.github = `https://github.com/${profile.github_profile_id}`;
+        }
+        if (profile.twitter_profile_id) {
+            socialLinks.twitter = `https://x.com/${profile.twitter_profile_id}`;
+        }
+
+        const title = profile.full_name
+            ? `${profile.full_name}${profile.headline ? ` — ${profile.headline}` : ""}`
+            : null;
+
+        const description = profile.summary?.slice(0, 500) || profile.headline || null;
+
+        const result: EnrichmentResult = {
+            title,
+            description,
+            ogImage: profile.profile_pic_url || null,
+            keyParagraphs: keyParagraphs.slice(0, 10),
+            headings: headings.slice(0, 5),
+            detectedTech: [],
+            socialLinks,
+            sourceUrl: linkedinUrl,
+            scrapedAt: new Date().toISOString(),
+        };
+
+        // ── Step 2: Auto-scrape company website if found in profile ──
+        const companyUrl = extractCompanyUrl(profile);
+        if (companyUrl) {
+            console.log(`[enrich] Found company website from LinkedIn: ${companyUrl}, scraping...`);
+            const { data: siteData } = await scrapeWebsite(companyUrl);
+            if (siteData) {
+                // Merge website data into the LinkedIn result
+                result.keyParagraphs = [
+                    ...result.keyParagraphs,
+                    ...siteData.keyParagraphs.map((p) => `[Company] ${p}`),
+                ].slice(0, 15);
+
+                result.headings = [
+                    ...result.headings,
+                    ...siteData.headings.map((h) => `[Company] ${h}`),
+                ].slice(0, 10);
+
+                if (siteData.description) {
+                    result.description = `${result.description ?? ""}\n\nCompany: ${siteData.description}`;
+                }
+
+                result.detectedTech = siteData.detectedTech;
+                result.socialLinks = { ...siteData.socialLinks, ...result.socialLinks };
+
+                // Add company site as a social link
+                result.socialLinks.website = companyUrl;
+
+                console.log(`[enrich] Merged company website data from ${companyUrl}`);
+            }
+        }
+
+        console.log(`[enrich] Enrichment complete for ${linkedinUrl}: ${result.keyParagraphs.length} total paragraphs`);
+        return { data: result, error: null };
+    } catch (err: any) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+            return { data: null, error: "Proxycurl request timed out (20s). Try again." };
+        }
+        console.error(`[enrich] Proxycurl exception:`, err);
+        return {
+            data: null,
+            error: `Proxycurl request failed: ${err instanceof Error ? err.message : "Unknown error"}`,
+        };
+    }
+}
+
+/**
+ * Extract the best company/personal website URL from a LinkedIn profile response.
+ * Checks: experiences[0].company_linkedin_profile_url domain, personal websites, etc.
+ */
+function extractCompanyUrl(profile: Record<string, any>): string | null {
+    // 1. Check if the current company has a website in its LinkedIn data
+    if (profile.experiences?.length) {
+        const current = profile.experiences[0]; // most recent experience
+        // Some profiles include the company's website
+        if (current.company_linkedin_profile_url) {
+            // We can't scrape LinkedIn company pages either, but the company name helps
+        }
+        // Try to derive website from company name
+        if (current.company) {
+            const companySlug = current.company.trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+            if (companySlug && companySlug.length > 1) {
+                // Common pattern: company name → companyname.com
+                return `https://${companySlug}.com`;
+            }
+        }
+    }
+
+    // 2. Check personal websites from the profile
+    if (profile.personal_urls?.length) {
+        for (const urlObj of profile.personal_urls) {
+            const url = typeof urlObj === "string" ? urlObj : urlObj?.url;
+            if (url && !url.includes("linkedin.com")) {
+                return url.startsWith("http") ? url : `https://${url}`;
+            }
+        }
+    }
+
+    // 3. Check websites array
+    if (profile.websites?.length) {
+        for (const site of profile.websites) {
+            const url = typeof site === "string" ? site : site?.url;
+            if (url && !url.includes("linkedin.com")) {
+                return url.startsWith("http") ? url : `https://${url}`;
+            }
+        }
+    }
+
+    return null;
 }
 
 /**

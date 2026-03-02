@@ -87,12 +87,12 @@ export async function createProspect(formData: FormData) {
     const role = (formData.get("role") as string)?.trim() || null;
     const linkedin_url = (formData.get("linkedin_url") as string)?.trim() || null;
 
-    if (!email) {
-        return { error: "Email is required." };
+    if (!email && !linkedin_url) {
+        return { error: "Either email or LinkedIn URL is required." };
     }
 
-    // Basic email validation
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    // Basic email validation (only if provided)
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return { error: "Please enter a valid email address." };
     }
 
@@ -137,8 +137,8 @@ export async function updateProspect(id: string, formData: FormData) {
     const role = (formData.get("role") as string)?.trim() || null;
     const linkedin_url = (formData.get("linkedin_url") as string)?.trim() || null;
 
-    if (!email) {
-        return { error: "Email is required." };
+    if (!email && !linkedin_url) {
+        return { error: "Either email or LinkedIn URL is required." };
     }
 
     const { error } = await supabase

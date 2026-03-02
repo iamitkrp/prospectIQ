@@ -39,11 +39,22 @@ export async function getUserSettings() {
 
     const { data } = await supabase
         .from("user_settings")
-        .select("smtp_email, is_smtp_verified, smtp_provider")
+        .select("smtp_email, is_smtp_verified, smtp_provider, enrich_api_key")
         .eq("user_id", user.id)
         .single();
 
-    return data;
+    if (!data) return null;
+
+    // Return masked key info (never expose the raw key to the client)
+    return {
+        smtp_email: data.smtp_email,
+        is_smtp_verified: data.is_smtp_verified,
+        smtp_provider: data.smtp_provider,
+        hasEnrichKey: !!data.enrich_api_key,
+        enrichKeyLastFour: data.enrich_api_key
+            ? decrypt(data.enrich_api_key)?.slice(-4) ?? null
+            : null,
+    };
 }
 
 export async function verifySmtpConnection({ email, password }: { email: string, password: string }) {
@@ -102,9 +113,15 @@ export async function disconnectSmtpSettings() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { error: "Unauthorized" };
 
+        // Only clear SMTP fields, keep other settings
         const { error } = await supabase
             .from("user_settings")
-            .delete()
+            .update({
+                smtp_email: null,
+                smtp_app_password: null,
+                is_smtp_verified: false,
+                updated_at: new Date().toISOString(),
+            })
             .eq("user_id", user.id);
 
         if (error) throw error;
@@ -113,4 +130,75 @@ export async function disconnectSmtpSettings() {
     } catch (error: any) {
         return { error: error.message || "Failed to disconnect settings." };
     }
+}
+
+// ===========================================
+// Enrich Layer API Key Management
+// ===========================================
+
+export async function saveEnrichKey(apiKey: string) {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { error: "Unauthorized" };
+
+        const trimmed = apiKey.trim();
+        if (!trimmed) return { error: "API key cannot be empty." };
+
+        // Encrypt the key before storage
+        const encryptedKey = encrypt(trimmed);
+
+        const { error } = await supabase
+            .from("user_settings")
+            .upsert({
+                user_id: user.id,
+                enrich_api_key: encryptedKey,
+                updated_at: new Date().toISOString(),
+            }, { onConflict: "user_id" });
+
+        if (error) throw error;
+
+        return { success: true };
+    } catch (error: any) {
+        return { error: error.message || "Failed to save API key." };
+    }
+}
+
+export async function deleteEnrichKey() {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { error: "Unauthorized" };
+
+        const { error } = await supabase
+            .from("user_settings")
+            .update({
+                enrich_api_key: null,
+                updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", user.id);
+
+        if (error) throw error;
+
+        return { success: true };
+    } catch (error: any) {
+        return { error: error.message || "Failed to remove API key." };
+    }
+}
+
+/**
+ * Retrieve the decrypted Enrich Layer API key for a given user.
+ * This is used server-side by the enrichment API route.
+ * NEVER expose the decrypted key to the client.
+ */
+export async function getDecryptedEnrichKey(userId: string): Promise<string | null> {
+    const supabase = await createClient();
+    const { data } = await supabase
+        .from("user_settings")
+        .select("enrich_api_key")
+        .eq("user_id", userId)
+        .single();
+
+    if (!data?.enrich_api_key) return null;
+    return decrypt(data.enrich_api_key);
 }

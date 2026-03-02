@@ -1,5 +1,6 @@
 import { getUserSettings } from "./actions";
 import { SmtpForm } from "./smtp-form";
+import { EnrichKeyForm } from "./enrich-key-form";
 import "./settings.css";
 
 export const metadata = {
@@ -16,6 +17,7 @@ export default async function SettingsPage() {
                 <p className="page-subtitle">Manage your account and email sending preferences.</p>
             </div>
 
+            {/* SMTP Card */}
             <div className="settings-card">
                 <div className="settings-card-header">
                     <div className="settings-card-header-icon">
@@ -59,6 +61,56 @@ export default async function SettingsPage() {
 
                     <div className="smtp-form-wrapper">
                         <SmtpForm initialSettings={settings} />
+                    </div>
+                </div>
+            </div>
+
+            {/* Enrich Layer Card */}
+            <div className="settings-card" style={{ marginTop: "1.5rem" }}>
+                <div className="settings-card-header">
+                    <div className="settings-card-header-icon" style={{ background: "rgba(34, 197, 94, 0.12)", color: "#22c55e" }}>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                            <rect x="2" y="9" width="4" height="12" />
+                            <circle cx="4" cy="4" r="2" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 className="settings-card-title">LinkedIn Enrichment</h2>
+                        <p className="settings-card-desc">
+                            Connect your Enrich Layer API key to auto-research prospects from their LinkedIn profiles.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="settings-card-body">
+                    <div className="smtp-instructions">
+                        <h3 className="smtp-instructions-title">How to connect</h3>
+                        <ol className="smtp-steps">
+                            <li>
+                                Sign up at{" "}
+                                <a href="https://enrichlayer.com" target="_blank" rel="noreferrer">
+                                    enrichlayer.com
+                                </a>{" "}
+                                — you get <strong>200 free credits</strong>
+                            </li>
+                            <li>
+                                Go to <strong>Enrich Layer API → API Key</strong>
+                            </li>
+                            <li>
+                                Copy your API key and paste it here →
+                            </li>
+                        </ol>
+                        <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.75rem" }}>
+                            Each LinkedIn lookup costs 1 credit. Your key is encrypted with AES-256 before storage and never exposed to the browser.
+                        </p>
+                    </div>
+
+                    <div className="smtp-form-wrapper">
+                        <EnrichKeyForm
+                            hasKey={settings?.hasEnrichKey ?? false}
+                            lastFour={settings?.enrichKeyLastFour ?? null}
+                        />
                     </div>
                 </div>
             </div>

@@ -128,10 +128,16 @@ export function ProspectTable({ prospects, currentPage, totalPages, totalCount, 
             });
             const json = await res.json();
             if (!res.ok) {
-                setError(json.error ?? "Enrichment failed");
+                // Log full details to browser console for debugging
+                console.error("[enrich] Error response:", json);
+                const hint = json.details?.hint;
+                const attemptedUrl = json.details?.attemptedUrl;
+                let msg = json.error ?? "Enrichment failed";
+                if (hint) msg += ` — ${hint}`;
+                if (attemptedUrl) msg += ` (URL: ${attemptedUrl})`;
+                setError(msg);
             } else {
                 setSuccess("Research complete!");
-                // Update the prospect's raw_data locally so the drawer shows it
                 const enrichedProspect = {
                     ...prospect,
                     raw_data: {
@@ -143,7 +149,8 @@ export function ProspectTable({ prospects, currentPage, totalPages, totalCount, 
                 setDetailProspect(enrichedProspect);
                 router.refresh();
             }
-        } catch {
+        } catch (err) {
+            console.error("[enrich] Network error:", err);
             setError("Network error — could not reach the server.");
         } finally {
             setEnrichingId(null);
@@ -635,8 +642,8 @@ function ProspectModal({ title, submitLabel, onSubmit, onClose, loading, default
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="modal_email" className="form-label">Email *</label>
-                        <input id="modal_email" name="email" type="email" className="form-input" placeholder="david@neopay.com" required defaultValue={defaults?.email ?? ""} />
+                        <label htmlFor="modal_email" className="form-label">Email</label>
+                        <input id="modal_email" name="email" type="email" className="form-input" placeholder="david@neopay.com" defaultValue={defaults?.email ?? ""} />
                     </div>
 
                     <div className="form-row">
@@ -653,6 +660,7 @@ function ProspectModal({ title, submitLabel, onSubmit, onClose, loading, default
                     <div className="form-group">
                         <label htmlFor="linkedin_url" className="form-label">LinkedIn URL</label>
                         <input id="linkedin_url" name="linkedin_url" type="url" className="form-input" placeholder="https://linkedin.com/in/davidchen" defaultValue={defaults?.linkedin_url ?? ""} />
+                        <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "0.25rem", display: "block" }}>Either email or LinkedIn URL is required</span>
                     </div>
 
                     <div className="modal-actions">
