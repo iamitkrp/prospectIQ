@@ -105,7 +105,7 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
             <StepBuilder
                 campaignId={campaign.id}
                 initialSteps={steps}
-                readOnly={campaign.status !== "DRAFT"}
+                readOnly={false}
             />
         </>
     );

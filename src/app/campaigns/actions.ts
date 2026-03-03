@@ -439,6 +439,24 @@ export async function addProspectsToCampaign(
         return { count: 0, error: error.message };
     }
 
+    // If campaign is ACTIVE, trigger Step 1 for the newly added prospects automatically
+    const { data: campaign } = await supabase
+        .from("campaigns")
+        .select("status")
+        .eq("id", campaignId)
+        .single();
+
+    if (campaign && campaign.status === "ACTIVE") {
+        console.log(`[addProspectsToCampaign] Campaign is ACTIVE. Triggering Step 1 for ${prospectIds.length} new prospects...`);
+
+        // Fire and forget so we don't block the UI
+        Promise.allSettled(
+            prospectIds.map((pid) => executeCampaignStep(campaignId, pid, 1))
+        ).catch((err: unknown) => {
+            console.error("[addProspectsToCampaign] Background step execution failed:", err);
+        });
+    }
+
     return { count: prospectIds.length, error: null };
 }
 

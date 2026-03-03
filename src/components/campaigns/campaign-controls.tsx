@@ -123,14 +123,12 @@ export function CampaignControls({ campaign, prospectCount: initialCount, stepCo
                     <span className="campaign-prospect-count">
                         👥 {pCount} prospect{pCount !== 1 ? "s" : ""}
                     </span>
-                    {isDraft && (
-                        <button
-                            className="btn-secondary btn-sm"
-                            onClick={() => setShowAddModal(true)}
-                        >
-                            + Add Prospects
-                        </button>
-                    )}
+                    <button
+                        className="btn-secondary btn-sm"
+                        onClick={() => setShowAddModal(true)}
+                    >
+                        + Add Prospects
+                    </button>
                 </div>
 
                 {/* Status controls */}

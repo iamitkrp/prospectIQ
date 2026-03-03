@@ -173,19 +173,7 @@
     border-radius: var(--radius-md);
 }
 
-.btn-danger {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    cursor: pointer;
-    font-family: inherit;
-    font-weight: 500;
-    transition: all var(--transition-fast);
-}
 
-.btn-danger:hover {
-    background: rgba(239, 68, 68, 0.2);
-}
 
 /* ── Delete Confirm ── */
 
