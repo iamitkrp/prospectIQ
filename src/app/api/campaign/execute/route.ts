@@ -31,11 +31,8 @@ import { executeCampaignStep } from "@/lib/campaign-engine";
  *   7. Schedule next step via QStash (if one exists)
  */
 
-const SECONDS_PER_DAY = 86_400;
-const DAILY_SEND_LIMIT = parseInt(process.env.DAILY_SEND_LIMIT ?? "300", 10);
 
-/** Error codes that should NOT be retried by QStash */
-const PERMANENT_ERROR_CODES = new Set(["INVALID_EMAIL", "DAILY_LIMIT"]);
+
 
 /* ── QStash signature receiver (lazy-init to avoid crash if env is missing in dev) ── */
 let _receiver: Receiver | null = null;

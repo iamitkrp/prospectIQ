@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Box, Zap, Lock, BarChart3, Mail, Layers } from "lucide-react"; // Wait, lucide-react might not be installed. Let me check the package.json.
-// Actually, I should use standard SVGs to be safe, or just check package.json. I remember it only had recharts, supabase, tailwind. Let's use simple SVG icons.
+
 import { InteractiveBackground } from "./interactive-background";
 
 const FeatureCard = ({ title, description, icon }: { title: string, description: string, icon: React.ReactNode }) => (

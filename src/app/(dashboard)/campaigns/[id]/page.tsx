@@ -59,7 +59,7 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
         ? [[], [], { data: [] }]
         : await Promise.all([
             getCampaignActivity(id),
-            getCampaignProspectPipeline(id, steps.length),
+            getCampaignProspectPipeline(id),
             getPendingApprovals(id),
         ]);
 

@@ -84,7 +84,7 @@ export function ProspectsHeader({ count }: ProspectsHeaderProps) {
                         errors.push(...data.errors);
                     }
                 }
-            } catch (err) {
+            } catch {
                 errors.push(`Chunk ${Math.floor(i / CHUNK_SIZE) + 1}: Network error`);
             }
 

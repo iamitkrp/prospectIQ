@@ -651,8 +651,7 @@ export interface PipelineEntry {
  * Build the prospect pipeline — where each prospect stands in the campaign sequence.
  */
 export async function getCampaignProspectPipeline(
-    campaignId: string,
-    _totalSteps: number
+    campaignId: string
 ): Promise<PipelineEntry[]> {
     const supabase = await createClient();
     const {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 export function InteractiveBackground() {
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });

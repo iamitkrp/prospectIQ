@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Campaign } from "@/types/database";
+
 import { createCampaign, deleteCampaign } from "@/app/campaigns/actions";
 import type { CampaignWithStats } from "@/app/campaigns/actions";
 
